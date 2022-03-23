@@ -1,0 +1,266 @@
+#+TITLE:MPV
+
+[[https://mpv.io/manual/master/][official manual]], [[https://mpv.io/manual/master/#keyboard-control][keybindings]]
+
+Download and put [[https://github.com/hl2guide/better-mpv-config][better-mpv-config]] in your mpv config dir (~/.config/mpv in my
+case)
+
+Also put [[https://github.com/mpv-player/mpv/blob/master/TOOLS/umpv][umpv]] script in same (not necessarily, but othervise don't forget to
+change qt config.py) dir (name it just ~umpv~)
+
+[[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
+
+** Scripts added [[https://github.com/mpv-player/mpv/wiki/User-Scripts][#user-scripts]]
+*** [[file:scripts/sponsorblock.lua][sponsorblock]]
+A fully-featured port of [SponsorBlock](https://github.com/ajayyy/SponsorBlock) for mpv.
+
+Default key bindings:
+- g to set segment boundaries
+- G (shift+g) to submit a segment
+- h to upvote the last segment
+- H (shift+h) to downvote the last segment
+
+*** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
+volume control using decibels
+
+#+begin_src lua
+-- Override default controls, https://github.com/mpv-player/mpv/blob/master/etc/input.conf
+mp.add_key_binding("9", "decrease-db", decrease_db, { repeatable = true })
+mp.add_key_binding("/", decrease_db, { repeatable = true })
+mp.add_key_binding("WHEEL_LEFT", decrease_db, { repeatable = true })
+mp.add_key_binding("VOLUME_DOWN", decrease_db, { repeatable = true })
+
+mp.add_key_binding("0", "increase-db", increase_db, { repeatable = true })
+mp.add_key_binding("*", increase_db, { repeatable = true })
+mp.add_key_binding("WHEEL_RIGHT", increase_db, { repeatable = true })
+mp.add_key_binding("VOLUME_UP", increase_db, { repeatable = true })
+#+end_src
+*** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
+Read script top comment for installation & keybindings (yt api key i've created)
+*** WAIT [[file:scripts/interSubs.lua][interSubs]] [[https://github.com/oltodosel/interSubs][#docs]]
+-- default keybinding to start/stop: F5
+-- default keybinding to hide/show: F6
+*** TODO mpv-lastfm [[https://github.com/l29ah/w3crapcli/blob/master/last.fm/mpv-lastfm.lua][#docs]]
+*** [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
+i've set up kbd ctrl+shift+b
+*** [[file:scripts/mpv_chapters.js][mpv-chapters]] [[https://github.com/zxhzxhz/mpv-chapters][#docs]]
+Press tab to toggle chapter menu and jump with mouse click
+*** IDEA subtitles
+either [[https://github.com/directorscut82/find_subtitles][this]] or [[https://github.com/davidde/mpv-autosub][this]]. Former - press to download, latter - automatic
+also search on scripts page for 'sub-', there are lots of utility scripts for
+working with subtitles
+
+and yet another [[https://github.com/wiiaboo/mpv-scripts/blob/master/subit.lua][script]] for subtitles
+
+**** IDEA when learning jap
+[[https://github.com/linguisticmind/mpv-scripts/tree/master/copy-subtitle][copy-subtitle]]
+and [[https://github.com/liberlanco/mpv-lang-learner][lang-learner]] as a must
+and [[https://github.com/Ben-Kerman/immersive][immersive]] also for learning
+[[https://github.com/fxmarty/rikai-mpv][rikay-mpv]] - special for jap
+[[https://github.com/laelnasan/yomichampv][yomichampv]]
+*** osc-style
+Tried [[https://github.com/422658476/MPV-EASY-Player/tree/master/mpv-easy-data/osc-style][this]] source, wasn't able to get anything decent
+*** [[file:scripts/quack.lua][quack]] [[https://github.com/CounterPillow/mpv-quack][#docs]]
+temporarily reduce the volume after a seek
+*** [[file:scripts/reload.lua][reload]] [[https://github.com/4e6/mpv-reload][#docs]]
+~ctrl+r~ to reload if anything is wrong / stuck
+*** [[file:scripts/search-page.lua][search-page]] [[https://github.com/CogentRedTester/mpv-search-page][#docs]]
+search for keybinds, properties, options and commands and have matching entries display on the OSD.
+
+The default keybinds are listed below, these can be overwritten using input.conf:
+
+f12         script-binding open-search-page
+Shift+f12   script-binding open-search-page/advanced
+            script-message open-page [page]
+            script-message open-page/advanced [page]
+
+The default keybinds are listed below, these can be overwritten using input.conf:
+
+f12         script-binding open-search-page
+Shift+f12   script-binding open-search-page/advanced
+            script-message open-page [page]
+            script-message open-page/advanced [page]
+
+*** [[https://github.com/Eisa01/mpv-scripts#smartcopypaste_ii][smartcopypaste II]], [[https://github.com/Eisa01/mpv-scripts#simplehistory][simplehistory]] and [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
+*smartcopypaste ii* default keybinds:
+- Ctrl+c copies file path with resume time
+- Ctrl+v pastes and run file into mpv
+- Ctrl+Alt+c copies the file path without time
+- Ctrl+Alt+v appends the video file into playlist
+- MAC OS will also use Command key for copy and paste
+- c opens Clipboard list (Log Manager)
+
+*simplehistory* Default Keybinds:
+Ctrl+r resume in any previously closed videos / idle: loads and resumes last played video
+Alt+r add last closed video into playlist / idle: loads last closed video without resuming
+h opens History list (Log Manager)
+r opens History list - filtered with recent items (Log Manager)
+
+*undoredo* Default Keybinds
+Ctrl+z to undo by returning to previous time.
+Ctrl+y to redo by restoring the undo time.
+Ctrl+Alt+z undo accidental seek by returning to previous time and vise-versa.
+*** [[file:scripts/youtube-quality.lua][youtube-quality]] [[https://github.com/jgreco/mpv-youtube-quality][#docs]]
+Toggle the menu with ctrl+f (configurable). Select from the list with the arrow keys (configurable), and press enter (configurable) to select. Menu times out after 10 seconds (configurable.)
+
+*** [[file:scripts/youtube-upnext.lua][youtube-upnext]] [[https://github.com/cvzi/mpv-youtube-upnext][#docs]]
+Toggle the menu with ctrl+u (configurable). Select from the list with the arrow keys (configurable), and press enter (configurable) to select. Menu times out after 10 seconds (configurable.)
+*** [?] [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
+
+** Todo
+*** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
+*** HOLD mpv as a music player
+[[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
+scripts/ which might b sometime useful again for my main pc
+*** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
+*** IDEA Anime
+https://github.com/ehoneyse/mpv-open-anilist-page
+** To keep in mind
+*** [[https://github.com/cvzi/mpv-youtube-download][mpv-youtube-download]]
+*** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
+** Keybindings
+:PROPERTIES:
+:header-args: :tangle input.conf
+:END:
+
+[[https://github.com/mpv-player/mpv/blob/master/etc/input.conf][default keybindings]]
+
+Use SHARP to assign the # key.
+
+List of commands and further details: DOCS/man/input.rst
+List of special keys: --input-keylist
+Keybindings testing mode: mpv --input-test --force-window --idle
+
+Use 'ignore' to unbind a key fully (e.g. 'ctrl+a ignore').
+
+Strings need to be quoted and escaped:
+  KEY show-text "This is a single backslash: \\ and a quote: \" !"
+
+The default keybindings are hardcoded into the mpv binary.
+You can disable them completely with: --no-input-default-bindings
+
+Developer note:
+On compilation, this file is baked into the mpv binary, and all lines are
+uncommented (unless '#' is followed by a space) - thus this file defines the
+default key bindings.
+
+If this is enabled, treat all the following bindings as default:
+#+begin_src conf
+default-bindings start
+#+end_src
+
+*** Playback
+#+begin_src conf
+# Seek units are in seconds, but note that these are limited by keyframes
+l seek  10                          # seek 5 seconds forward
+h seek -10                          # seek 5 seconds backward
+# Do smaller, always exact (non-keyframe-limited), seeks with shift.
+# Don't show them on the OSD (no-osd).
+# Shift+UP    no-osd seek  5 exact       # seek exactly 5 seconds forward
+# Shift+DOWN  no-osd seek -5 exact       # seek exactly 5 seconds backward
+Ctrl+LEFT   no-osd sub-seek -1         # seek to the previous subtitle
+Ctrl+RIGHT  no-osd sub-seek  1         # seek to the next subtitle
+Alt++     add video-zoom   0.1         # zoom in
+Alt+-     add video-zoom  -0.1         # zoom out
+PGUP add chapter 1                     # seek to the next chapter
+PGDWN add chapter -1                   # seek to the previous chapter
+
+[ multiply speed 1/1.1                 # decrease the playback speed
+] multiply speed 1.1                   # increase the playback speed
+{ multiply speed 0.5                   # halve the playback speed
+} multiply speed 2.0                   # double the playback speed
+0 set speed 1.0                       # reset the speed to normal
+
+. frame-step                           # advance one frame and pause
+, frame-back-step                      # go back by one frame and pause
+
+SPACE cycle pause                      # toggle pause/playback mode
+
+PLAY cycle pause                       # toggle pause/playback mode
+PAUSE cycle pause                      # toggle pause/playback mode
+PLAYPAUSE cycle pause                  # toggle pause/playback mode
+PLAYONLY set pause no                  # unpause
+PAUSEONLY set pause yes                # pause
+FORWARD seek 60                        # seek 1 minute forward
+REWIND seek -60                        # seek 1 minute backward
+#+end_src
+*** [?] Subtitles
+TEST ~Alt+Ctrl+C~
+
+#+begin_src conf
+Alt+Ctrl+- add sub-delay -0.1                   # shift subtitles 100 ms earlier
+Alt+Ctrl++ add sub-delay +0.1                   # delay subtitles by 100 ms
+
+Alt+c cycle sub-visibility                 # hide or show the subtitles
+Alt+C cycle sub-ass-vsfilter-aspect-compat # toggle stretching SSA/ASS subtitles with anamorphic videos to match the historical renderer
+Alt+Ctrl+C cycle-values sub-ass-override "force" "no" # toggle overriding SSA/ASS subtitle styles with the normal styles
+Alt+Ctrl+c cycle sub                            # switch subtitle track
+#+end_src
+
+Bind those if ya'll ever need 'em:
+Shift+g add sub-scale +0.1             # increase the subtitle font size
+Shift+f add sub-scale -0.1             # decrease the subtitle font size
+Ctrl+Shift+LEFT sub-step -1            # change subtitle timing such that the previous subtitle is displayed
+Ctrl+Shift+RIGHT sub-step 1            # change subtitle timing such that the next subtitle is displayed
+
+*** Audio
+#+begin_src conf
+ctrl++ add audio-delay 0.100           # change audio/video sync by delaying the audio
+ctrl+- add audio-delay -0.100          # change audio/video sync by shifting the audio earlier
+j add volume -2
+k add volume 2
+m cycle mute                           # toggle mute
+#+end_src
+
+*** Filters
+#+begin_src conf
+Alt+1 add contrast -1
+Alt+2 add contrast 1
+Alt+3 add brightness -1
+Alt+4 add brightness 1
+Alt+5 add gamma -1
+Alt+6 add gamma 1
+Alt+7 add saturation -1
+Alt+8 add saturation 1
+#+end_src
+
+*** Misc
+#+begin_src conf
+# Quitting
+q quit
+Q quit-watch-later                     # exit and remember the playback position
+q {encode} quit 4
+ESC set fullscreen no                  # leave fullscreen
+ESC {encode} quit 4
+
+Alt+0 set video-zoom 0 ; set video-pan-x 0 ; set video-pan-y 0 # reset zoom and pan settings
+? show-progress                        # show playback progress
+i script-binding stats/display-stats-toggle # toggle displaying information and statistics
+` script-binding console/enable        # open the console
+Ctrl+F cycle fullscreen                     # toggle fullscreen
+
+Alt+a cycle audio                      # switch audio track
+Alt+v cycle video                          # switch video track
+Alt+Ctrl+v cycle-values video-aspect-override "16:9" "4:3" "2.35:1" "-1" # cycle the video aspect ratio ("-1" is the container aspect)
+
+> playlist-next                        # skip to the next file
+< playlist-prev                        # skip to the previous file
+
+Ctrl+S screenshot video                     # take a screenshot of the video in its original resolution without subtitles
+
+Alt+l ab-loop                              # set/clear A-B loop points
+Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
+
+& show-text ${playlist}               # show the playlist
+^ show-text ${track-list}             # show the list of video, audio and sub tracks
+#+end_src
+
+*** Unknown purpose
+#w add panscan -0.1                     # decrease panscan
+#W add panscan +0.1                     # shrink black bars by cropping the video
+#e add panscan +0.1                     # shrink black bars by cropping the video
+
+#E cycle edition                        # switch edition
+#ctrl+h cycle-values hwdec "auto" "no"  # toggle hardware decoding
+
+#d cycle deinterlace                    # toggle the deinterlacing filter
