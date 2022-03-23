@@ -239,9 +239,9 @@ function scroll_list:new()
         selected = 1,
 
         keybinds = {
-            {'DOWN', 'scroll_down', function() vars:scroll_down() end, {repeatable = true}},
-            {'UP', 'scroll_up', function() vars:scroll_up() end, {repeatable = true}},
-            {'ESC', 'close_browser', function() vars:close() end, {}}
+            {'j', 'scroll_down', function() vars:scroll_down() end, {repeatable = true}},
+            {'k', 'scroll_up', function() vars:scroll_up() end, {repeatable = true}},
+            {'Ctrl+[', 'close_browser', function() vars:close() end, {}}
         }
     }
     return setmetatable(vars, metatable)

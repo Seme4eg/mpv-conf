@@ -1,6 +1,7 @@
 #+TITLE:MPV
+#+STARTUP: nohideblocks
 
-[[https://mpv.io/manual/master/][official manual]], [[https://mpv.io/manual/master/#keyboard-control][keybindings]]
+[[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i used for "getting in"), [[https://mpv.io/manual/master/#keyboard-control][keybindings]]
 
 Download and put [[https://github.com/hl2guide/better-mpv-config][better-mpv-config]] in your mpv config dir (~/.config/mpv in my
 case)
@@ -14,35 +15,27 @@ change qt config.py) dir (name it just ~umpv~)
 *** [[file:scripts/sponsorblock.lua][sponsorblock]]
 A fully-featured port of [SponsorBlock](https://github.com/ajayyy/SponsorBlock) for mpv.
 
-Default key bindings:
-- g to set segment boundaries
-- G (shift+g) to submit a segment
-- h to upvote the last segment
-- H (shift+h) to downvote the last segment
+*NOTE*: i've set ~local_database = false~ in script file ([[https://github.com/po5/mpv_sponsorblock/issues/50][gh-issue]])
 
-*** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
-volume control using decibels
+mp.add_key_binding("Alt+6", "set_segment", set_segment)
+mp.add_key_binding("Alt+7", "submit_segment", submit_segment)
+mp.add_key_binding("Alt+u", "upvote_segment", function() return vote("1") end)
+mp.add_key_binding("Alt+d", "downvote_segment", function() return vote("0") end)
 
-#+begin_src lua
--- Override default controls, https://github.com/mpv-player/mpv/blob/master/etc/input.conf
-mp.add_key_binding("9", "decrease-db", decrease_db, { repeatable = true })
-mp.add_key_binding("/", decrease_db, { repeatable = true })
-mp.add_key_binding("WHEEL_LEFT", decrease_db, { repeatable = true })
-mp.add_key_binding("VOLUME_DOWN", decrease_db, { repeatable = true })
+*** TODO [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
+volume control using decibels, ~j/k~
 
-mp.add_key_binding("0", "increase-db", increase_db, { repeatable = true })
-mp.add_key_binding("*", increase_db, { repeatable = true })
-mp.add_key_binding("WHEEL_RIGHT", increase_db, { repeatable = true })
-mp.add_key_binding("VOLUME_UP", increase_db, { repeatable = true })
-#+end_src
-*** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
-Read script top comment for installation & keybindings (yt api key i've created)
+starts at -12 db?
+
 *** WAIT [[file:scripts/interSubs.lua][interSubs]] [[https://github.com/oltodosel/interSubs][#docs]]
 -- default keybinding to start/stop: F5
 -- default keybinding to hide/show: F6
 *** TODO mpv-lastfm [[https://github.com/l29ah/w3crapcli/blob/master/last.fm/mpv-lastfm.lua][#docs]]
-*** [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
-i've set up kbd ctrl+shift+b
+*** TODO [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
+kbd at the bottom of the script
+
+*NOTE* slows everything down *a lot* + triggers only on fullscreen toggle
+
 *** [[file:scripts/mpv_chapters.js][mpv-chapters]] [[https://github.com/zxhzxhz/mpv-chapters][#docs]]
 Press tab to toggle chapter menu and jump with mouse click
 *** IDEA subtitles
@@ -64,7 +57,19 @@ Tried [[https://github.com/422658476/MPV-EASY-Player/tree/master/mpv-easy-data/o
 temporarily reduce the volume after a seek
 *** [[file:scripts/reload.lua][reload]] [[https://github.com/4e6/mpv-reload][#docs]]
 ~ctrl+r~ to reload if anything is wrong / stuck
-*** [[file:scripts/search-page.lua][search-page]] [[https://github.com/CogentRedTester/mpv-search-page][#docs]]
+*** IDEA [[file:scripts/search-page.lua][search-page]] [[https://github.com/CogentRedTester/mpv-search-page][#docs]]
+*Rewrite dat shit* as in vim with [[https://mpv.io/manual/master/#javascript][JS]]
+
+Also changed esc for Ctrl+[ in [[file:scripts/user-input.lua][user-input.lua]] and altered lines below in
+[[file:script-modules/scroll-list.lua]]
+
+: keybinds = {
+    : {'j', 'scroll_down', function() vars:scroll_down() end, {repeatable = true}},
+    : {'k', 'scroll_up', function() vars:scroll_up() end, {repeatable = true}},
+    : {'Ctrl+[', 'close_browser', function() vars:close() end, {}}
+: }
+
+
 search for keybinds, properties, options and commands and have matching entries display on the OSD.
 
 The default keybinds are listed below, these can be overwritten using input.conf:
@@ -81,31 +86,98 @@ Shift+f12   script-binding open-search-page/advanced
             script-message open-page [page]
             script-message open-page/advanced [page]
 
-*** [[https://github.com/Eisa01/mpv-scripts#smartcopypaste_ii][smartcopypaste II]], [[https://github.com/Eisa01/mpv-scripts#simplehistory][simplehistory]] and [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
-*smartcopypaste ii* default keybinds:
-- Ctrl+c copies file path with resume time
-- Ctrl+v pastes and run file into mpv
-- Ctrl+Alt+c copies the file path without time
-- Ctrl+Alt+v appends the video file into playlist
-- MAC OS will also use Command key for copy and paste
-- c opens Clipboard list (Log Manager)
+*** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
+Read script top comment for installation & keybindings (yt api key i've created)
 
-*simplehistory* Default Keybinds:
+mp.add_key_binding(nil, "yt", open_search_input)
+mp.add_key_binding("/", "youtube-search", function()
+
+\+ j/k and C-[
+
+*** [[https://github.com/Eisa01/mpv-scripts#smartcopypaste_ii][smartcopypaste II]], [[https://github.com/Eisa01/mpv-scripts#simplehistory][simplehistory]] and [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
+**** *smartcopypaste ii* default keybinds:
+- C-c :: copy vid url
+- C-v :: paste vid url
+- C-C :: copy vid url with timestamp
+- C-V :: paste as a playlist
+- M-c :: open copypaste list with filters (a[ll], r[ecents], f[ileonly],
+  d[istinct], k[eywords], more 'bout filters again in =conf= file)
+
+Keybindings that will be used to navigate up on the list:
+
+k/j, C-b/f, g[g]/G, C-[, / as in vim
+
+#--Keybind that will be used to load highlighted entry from the list
+list_select_keybind=["ENTER"]
+#--Keybind that will be used to add the selected entry to playlist
+list_add_playlist_keybind=["SHIFT+ENTER"]
+#--Keybind that will be used to close the list (closes search first if it is open)
+list_close_keybind=["ESC", "q", "ctrl+["]
+#--Keybind that will be used to delete the highlighted entry from the list
+list_delete_keybind=["DEL"]
+#--Keybind that will be used to exit typing mode of search while keeping search open
+list_search_not_typing_mode_keybind=["CTRL+ENTER"]
+#--Keybind thats are ignored when list is open
+list_ignored_keybind=["h", "H", "r", "R", "b", "B", "k", "K"]
+
+**** *simplehistory* Default Keybinds:
 Ctrl+r resume in any previously closed videos / idle: loads and resumes last played video
 Alt+r add last closed video into playlist / idle: loads last closed video without resuming
 h opens History list (Log Manager)
 r opens History list - filtered with recent items (Log Manager)
 
-*undoredo* Default Keybinds
-Ctrl+z to undo by returning to previous time.
-Ctrl+y to redo by restoring the undo time.
-Ctrl+Alt+z undo accidental seek by returning to previous time and vise-versa.
+history_resume_keybind=["Alt+>"]
+history_load_last_keybind=["alt+<"]
+open_list_keybind=[ ["Alt+h"] ]
+list_filter_jump_keybind=[ ["a", "all"], ["r", "recents"], ["d", "distinct"], ["f", "fileonly"] ]
+history_incognito_mode_keybind=["Alt+H"]
+next_filter_sequence_keybind=["l"]
+previous_filter_sequence_keybind=["h"]
+list_cycle_sort_keybind=["o"]
+
+*Vim*: hjkl, C-b/f, g/G, /
+list_highlight_move_keybind=["SHIFT"]
+list_highlight_all_keybind=["h"]
+list_unhighlight_all_keybind=["H"]
+#--Keybind that will be used to add entry to playlist based on cursor position
+list_add_playlist_keybind=["CTRL+ENTER"]
+#--Keybind that will be used to add all highlighted entries to playlist
+list_add_playlist_highlighted_keybind=["SHIFT+ENTER"]
+list_close_keybind=["ESC", "q", "Ctrl+["]
+list_delete_keybind=["d"]
+list_delete_highlighted_keybind=["D"]
+#--Keybind that will be used to exit typing mode of search while keeping search open
+list_search_not_typing_mode_keybind=["ALT+ENTER"]
+#--Keybind thats are ignored when list is open
+list_ignored_keybind=["B", "b", "K", "c", "C"]
+
+**** *undoredo* Default Keybinds
+mp.add_key_binding("u", "undo", undo)
+mp.add_key_binding("r", "redo", redo)
+mp.add_key_binding("U", "undoLoop", undoLoop)
+
 *** [[file:scripts/youtube-quality.lua][youtube-quality]] [[https://github.com/jgreco/mpv-youtube-quality][#docs]]
-Toggle the menu with ctrl+f (configurable). Select from the list with the arrow keys (configurable), and press enter (configurable) to select. Menu times out after 10 seconds (configurable.)
+Change youtube video quality on the fly.
+
+toggle_menu_binding=alt+q
+k,j
 
 *** [[file:scripts/youtube-upnext.lua][youtube-upnext]] [[https://github.com/cvzi/mpv-youtube-upnext][#docs]]
-Toggle the menu with ctrl+u (configurable). Select from the list with the arrow keys (configurable), and press enter (configurable) to select. Menu times out after 10 seconds (configurable.)
+Fetch upnext/recommended videos from youtube
+
+toggle_menu_binding=alt+.
+k,j
+
 *** [?] [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
+*Playlist-view*:
+- ~G~ to toggle gallery view
+- hjkl, C-b/f, g/G, C-[, D[elete]
+- TAB - flag
+
+*Contact-sheet*:
+- ~C~ to toggle contact view (changed not in .conf tho, there is no option)
+- mouse_support=no
+- hjkl, C-b/f, g/G, C-[
 
 ** Todo
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
@@ -146,6 +218,8 @@ default key bindings.
 
 If this is enabled, treat all the following bindings as default:
 #+begin_src conf
+# DO NOT ALTER THIS FILE DIRECTLY, IT'S BEING TANGLED FROM README
+
 default-bindings start
 #+end_src
 
@@ -227,9 +301,9 @@ Alt+8 add saturation 1
 *** Misc
 #+begin_src conf
 # Quitting
-q quit
+# q quit
 Q quit-watch-later                     # exit and remember the playback position
-q {encode} quit 4
+# q {encode} quit 4
 ESC set fullscreen no                  # leave fullscreen
 ESC {encode} quit 4
 
@@ -264,3 +338,5 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #ctrl+h cycle-values hwdec "auto" "no"  # toggle hardware decoding
 
 #d cycle deinterlace                    # toggle the deinterlacing filter
+*** TODO Known free
+C, *
