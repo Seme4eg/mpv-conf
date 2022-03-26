@@ -11,6 +11,11 @@ change qt config.py) dir (name it just ~umpv~)
 
 [[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
 
+** Compilation
+first install mujs (for js), vapoursynth (for python) and luajit (for lua just
+in time compilation) so the meson script can see those deps and add needed build
+flags before building. Then proceed to [[https://github.com/mpv-player/mpv/#compilation][compilation]] section.
+
 ** Scripts added [[https://github.com/mpv-player/mpv/wiki/User-Scripts][#user-scripts]]
 *** [[file:scripts/sponsorblock.lua][sponsorblock]]
 A fully-featured port of [SponsorBlock](https://github.com/ajayyy/SponsorBlock) for mpv.
@@ -37,7 +42,7 @@ kbd at the bottom of the script
 *NOTE* slows everything down *a lot* + triggers only on fullscreen toggle
 
 *** [[file:scripts/mpv_chapters.js][mpv-chapters]] [[https://github.com/zxhzxhz/mpv-chapters][#docs]]
-Press tab to toggle chapter menu and jump with mouse click
+chapter menu, ~C-/~
 *** IDEA subtitles
 either [[https://github.com/directorscut82/find_subtitles][this]] or [[https://github.com/davidde/mpv-autosub][this]]. Former - press to download, latter - automatic
 also search on scripts page for 'sub-', there are lots of utility scripts for
@@ -85,7 +90,8 @@ f12         script-binding open-search-page
 Shift+f12   script-binding open-search-page/advanced
             script-message open-page [page]
             script-message open-page/advanced [page]
-
+*** [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
+several deps, view installation section in docs
 *** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
 Read script top comment for installation & keybindings (yt api key i've created)
 
@@ -167,6 +173,15 @@ Fetch upnext/recommended videos from youtube
 
 toggle_menu_binding=alt+.
 k,j
+*** [[file:scripts/ytdlautoformat.lua][ytdlautoformat]] [[https://github.com/Samillion/mpv-ytdlautoformat][#docs]]
+A simple mpv script to automatically change ytdl-format (for yt-dlp, youtube-dl)
+specifically if the URL is Youtube or Twitch.
+
+/Changd lines:/
+
+local changedQuality = 1080
+local enableVP9 = true
+local FPSLimit = 60
 
 *** [?] [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
 *Playlist-view*:
@@ -178,8 +193,17 @@ k,j
 - ~C~ to toggle contact view (changed not in .conf tho, there is no option)
 - mouse_support=no
 - hjkl, C-b/f, g/G, C-[
+** Shaders added [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]]
+*** [[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]]
 
 ** Todo
+*** TODO Rewrite all those LUA scripts as i please
+and make something like leader key (prefix) and vim-ishness possible
+
+Additional info: [[https://www.linuxjournal.com/article/9605?page=0,0][goot article on LUA]]
+
+*NO* js cuz mujs only provides ES5 and for me it's kinda legacy already rip
+
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
@@ -190,6 +214,9 @@ https://github.com/ehoneyse/mpv-open-anilist-page
 ** To keep in mind
 *** [[https://github.com/cvzi/mpv-youtube-download][mpv-youtube-download]]
 *** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
+*** [[https://github.com/Guldoman/mpv_inhibit_gnome][inhibit_gnome]]
+prevents screen blanking in GNOME while playing media.
+
 ** Keybindings
 :PROPERTIES:
 :header-args: :tangle input.conf
@@ -285,6 +312,17 @@ j add volume -2
 k add volume 2
 m cycle mute                           # toggle mute
 #+end_src
+*** Shaders
+#+NAME: Anime4K
+#+begin_src conf
+CTRL+1 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode A (Fast)"
+CTRL+2 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_Soft_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode B (Fast)"
+CTRL+3 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Upscale_Denoise_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode C (Fast)"
+CTRL+4 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_Restore_CNN_S.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode A+A (Fast)"
+CTRL+5 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_Soft_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Restore_CNN_Soft_S.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode B+B (Fast)"
+CTRL+6 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Upscale_Denoise_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Restore_CNN_S.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode C+A (Fast)"
+CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
+#+end_src
 
 *** Filters
 #+begin_src conf
@@ -312,6 +350,8 @@ Alt+0 set video-zoom 0 ; set video-pan-x 0 ; set video-pan-y 0 # reset zoom and 
 i script-binding stats/display-stats-toggle # toggle displaying information and statistics
 ` script-binding console/enable        # open the console
 Ctrl+F cycle fullscreen                     # toggle fullscreen
+
+Ctrl+i script-binding stats/display-stats-toggle # toggle displaying information and statistics
 
 Alt+a cycle audio                      # switch audio track
 Alt+v cycle video                          # switch video track
