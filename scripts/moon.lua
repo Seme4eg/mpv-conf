@@ -12,6 +12,9 @@
 local mp = require 'mp' -- isn't actually required, mp still gonna be defined
 -- local msg = require 'mp.msg'
 
+package.path = mp.command_native({"expand-path", "~~/script-modules/?.lua;"})..package.path
+local searcher = require "moon-searcher"
+
 -- TODO: better way of using assdraw?:
 -- local assdraw = require 'mp.assdraw'
 -- or
@@ -37,8 +40,13 @@ local opts = {
 
 -- GLOBAL vars
 local is_shown = false
+local search = {
+  query = '',
+  placeholder = ''
+}
 local chapter = {
   list = {},
+  filtered_list = {},
   current_i = nil, -- currently playing one
   selected_i = nil, -- currently being hovered by user
   count = nil,
@@ -96,10 +104,12 @@ local function set_menu_content()
 
   -- form search string and put it always on top
   osd_msg = get_styles('search') ..
-    -- TODO: setup blinking _
-    chapter.selected_i .. '/' .. chapter.count .. '   Select chapter: ' .. osd_msg_end
+    chapter.selected_i .. '/' .. chapter.count ..
+    '   Select chapter: ' .. search.placeholder .. osd_msg_end
 
-  for _,v in ipairs(chapter.list) do
+  -- local list = chapter.filtered_list
+
+  for _,v in ipairs(chapter.filtered_list or chapter.list) do
     local style = (chapter.list[chapter.current_i] == v) and 'current' or 'text'
     osd_msg = osd_msg .. get_styles(style) .. pointer(v) .. v .. osd_msg_end
   end
@@ -107,9 +117,26 @@ local function set_menu_content()
   assdraw.data = osd_msg
 end
 
+local function filter_list()
+  local list = {}
+  for i,v in ipairs(chapter.list) do
+    if not not string.find(v, search.query) then list[i] = v end
+  end
+  mp.msg.info(list, 'filtered')
+  chapter.filtered_list = list
+end
+
 local function init_keybindings()
+  local function handle_search(placeholder, query)
+    search.placeholder = placeholder
+    search.query = query
+    filter_list()
+    set_menu_content()
+    assdraw:update()
+  end
+  local function handle_submit(text) mp.msg.info(text, 'sub') end
 
-
+  searcher:init(handle_search, handle_submit, Toggle_chapters_menu)
 
   local function change_selected_index(num)
     chapter.selected_i = chapter.selected_i + num
