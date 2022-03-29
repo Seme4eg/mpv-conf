@@ -511,9 +511,6 @@ function searcher:define_key_bindings()
   mp.add_forced_key_binding("any_unicode", "search_input", function (...)
                               self:text_input(...)
   end, {repeatable = true, complex = true})
-  -- mp.add_forced_key_binding("j", "search_input", function (...)
-  --                             self:text_input(...)
-  -- end, {repeatable = true, complex = true})
   self.key_bindings[#self.key_bindings + 1] = "search_input"
 end
 

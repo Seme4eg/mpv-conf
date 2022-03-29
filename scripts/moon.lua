@@ -1,3 +1,31 @@
+-- script:
+-- - init()
+--   + get_chapters_info() -> gets all chapters & current chapter
+--   + extended_menu init()
+-- - and stores only those 2
+-- - submit() -> ... -> get_chapters_info() -> extended_menu:update/init()
+-- - filter_fn(list)
+
+-- extended menu:
+-- - init(list, [current], on_submit, [filter_fn]) # filter_fn cuz data might have
+--   different fields and /maybe/ make default one
+--   + sets list
+--   + =current=? -> update inner prop 'pointer_id' with set_pointer()
+-- - data:
+--   + pointer_index
+--   + current_index
+--   + list obj (full, filtered, current (any way to remove last?))
+-- - *one* =update()= -> =query= changed? -> no?-just rerender assdraw;
+--   yes?-=filter_list()= and then rerender assdraw
+-- - manages =C-j/k=
+-- - /questions/:
+--   - should have =get_pointer()= func to call it whenever main script event
+--     =on_submit()= is fired
+
+-- NOTES:
+-- - refresh =list= from /extended_menu/? -> pass =refresh_fn= to extended_menu:init()
+
+
 -- display chapter on osd and easily switch between chapters by click on title
 -- of chapter
 
@@ -41,16 +69,21 @@ local opts = {
 -- GLOBAL vars
 local is_shown = false
 local search = {
-  query = '',
-  placeholder = ''
+  query = '', -- actual search string
+  placeholder = '' -- just a visual part of search (includes cursor and styles)
 }
 local chapter = {
-  list = {},
+  full_list = {},
   filtered_list = {},
   current_i = nil, -- currently playing one
   selected_i = nil, -- currently being hovered by user
   count = nil,
 }
+
+-- FIXME: how to make this function a variable in the above object?
+function chapter:current_list()
+  return next(self.filtered_list) and self.filtered_list or self.full_list
+end
 
 local function get_chapters()
   local chaptersCount = mp.get_property("chapter-list/count")
@@ -64,7 +97,9 @@ local function get_chapters()
     -- We need to start from 0 here cuz mp returns titles starting with 0
     for i=0, chaptersCount do
       local chapterTitle = mp.get_property_native("chapter-list/"..i.."/title")
-      if chapterTitle then table.insert(chaptersArr, chapterTitle) end
+      if chapterTitle then
+        table.insert(chaptersArr, {index = i + 1, title = chapterTitle})
+      end
     end
 
     return chaptersArr
@@ -97,9 +132,8 @@ local function set_menu_content()
     return string.format(style_str, table.unpack(styles[style]))
   end
 
-  local function pointer(c)
-    return (c == chapter.list[chapter.selected_i])
-      and opts.pointer_icon or '  '
+  local function pointer(i)
+    return (i == chapter.selected_i) and opts.pointer_icon or '  '
   end
 
   -- form search string and put it always on top
@@ -107,11 +141,9 @@ local function set_menu_content()
     chapter.selected_i .. '/' .. chapter.count ..
     '   Select chapter: ' .. search.placeholder .. osd_msg_end
 
-  -- local list = chapter.filtered_list
-
-  for _,v in ipairs(chapter.filtered_list or chapter.list) do
-    local style = (chapter.list[chapter.current_i] == v) and 'current' or 'text'
-    osd_msg = osd_msg .. get_styles(style) .. pointer(v) .. v .. osd_msg_end
+  for i,v in ipairs(chapter:current_list()) do
+    local style = (chapter.current_i == v.index) and 'current' or 'text'
+    osd_msg = osd_msg .. get_styles(style) .. pointer(i) .. v.title .. osd_msg_end
   end
 
   assdraw.data = osd_msg
@@ -119,11 +151,11 @@ end
 
 local function filter_list()
   local list = {}
-  for i,v in ipairs(chapter.list) do
-    if not not string.find(v, search.query) then list[i] = v end
+  for _,v in ipairs(chapter.full_list) do
+    if not not string.find(v.title, search.query) then table.insert(list, v) end
   end
-  mp.msg.info(list, 'filtered')
   chapter.filtered_list = list
+  chapter.selected_i = next(chapter:current_list())
 end
 
 local function init_keybindings()
@@ -134,6 +166,7 @@ local function init_keybindings()
     set_menu_content()
     assdraw:update()
   end
+
   local function handle_submit(text) mp.msg.info(text, 'sub') end
 
   searcher:init(handle_search, handle_submit, Toggle_chapters_menu)
@@ -147,13 +180,18 @@ local function init_keybindings()
   end
 
   mp.add_forced_key_binding(opts.up_binding,     "move_up",   function() change_selected_index(-1) end, {repeatable=true})
-  mp.add_forced_key_binding(opts.down_binding,   "move_down", function() change_selected_index(1)  end, {repeatable=true})
+  mp.add_forced_key_binding(opts.down_binding,   "move_down", function() change_selected_index(1) end, {repeatable=true})
   mp.add_forced_key_binding(opts.select_binding, "select",    function()
-                              Toggle_chapters_menu()
                               -- .. and we subtract one index when we set to mp
-                              mp.set_property_native("chapter", chapter.selected_i - 1)
+                              mp.set_property_native("chapter", chapter:current_list()[chapter.selected_i].index - 1)
+                              Toggle_chapters_menu()
   end)
 
+end
+
+local function reset_selected()
+  -- so we add one index when we get from mp
+  chapter.selected_i = chapter.current_i
 end
 
 -- FIXME: find a way to make this func local and not break the code
@@ -167,17 +205,25 @@ function Toggle_chapters_menu()
     assdraw:update()
     init_keybindings()
   end
+
+  search = {
+    query = '',
+    placeholder = ''
+  }
+  chapter.filtered_list = {}
+  reset_selected()
 end
 
 local function chapter_info_update()
-  chapter.list = get_chapters()
+  chapter.full_list = get_chapters()
+  -- REVIEW: maybe get rid of it? and call #full_list whenever i need it?
   chapter.count = tonumber(mp.get_property("chapter-list/count"))
 
   if chapter.count == 0 then return nil end
 
   -- so we add one index when we get from mp
   chapter.current_i = mp.get_property_native("chapter") + 1
-  chapter.selected_i = chapter.current_i
+  reset_selected()
 
   set_menu_content()
 end
