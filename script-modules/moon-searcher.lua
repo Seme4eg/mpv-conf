@@ -2,6 +2,11 @@
 -- throw an error in console if any of required handlers were not passed
 -- if there are no chapters - draw a menu with 'no chaps' text styled
   -- differently
+-- add a param to 'init' - 'nodata' error, which will b shown instead of list
+-- add pause on start and resume on exit to opts
+    -- close_on_load_file = true,
+    -- pause_on_start = true,
+    -- resume_on_stop = "only-if-did-pause",
 
 local mp = require 'mp'
 -- local msg = require 'mp.msg'
@@ -20,7 +25,7 @@ local searcher = {
   is_active = false,
 
   list = {
-    full = {}, filtered = {}, current_i = nil, pointer_i = nil
+    full = {}, filtered = {}, current_i = 1, pointer_i = 1
   },
 
   line = '',
@@ -40,33 +45,35 @@ local searcher = {
   handlers = {},
 }
 
--- FIXME: how to make this function a variable in the above object?
+-- REVIEW: how to make this function a variable in the above object?
 function searcher.list:current()
-  return next(self.list.filtered) and self.list.filtered or self.list.full
-end
-
-function searcher:change_selected_index(num)
-  self.list.pointer_i = self.list.pointer_i + num
-  if self.list.pointer_i < 1 then self.list.pointer_i = #self.list.full
-  elseif self.list.pointer_i > #self.list.full then self.list.pointer_i = 1 end
-  self:update()
+  return searcher.line == '' and searcher.list.full or searcher.list.filtered
 end
 
 function searcher.list:filter()
   local result = {}
-  for _,v in ipairs(self.list.full) do
-    if not not string.find(v.title, self.line) then table.insert(result, v) end
+  for _,v in ipairs(searcher.list.full) do
+    if string.find(string.lower(v.title), string.lower(searcher.line)) then
+      table.insert(result, v)
+    end
   end
-  self.list.filtered = result
+  searcher.list.pointer_i = 1
+  searcher.list.filtered = result
 end
 
+function searcher:change_selected_index(num)
+  self.list.pointer_i = self.list.pointer_i + num
+  if self.list.pointer_i < 1 then self.list.pointer_i = #self.list:current()
+  elseif self.list.pointer_i > #self.list:current() then self.list.pointer_i = 1 end
+  self:update()
+end
 
 --[[
   The below code is a modified implementation of text input from mpv's console.lua:
   https://github.com/mpv-player/mpv/blob/87c9eefb2928252497f6141e847b74ad1158bc61/player/lua/console.lua
 
   I was too lazy to list all modifications i've done to the script, but if u
-  rly need to see those - do diff with the code in the above link..
+  rly need to see those - do diff with the original code
 ]]--
 
 -------------------------------------------------------------------------------
@@ -118,7 +125,9 @@ function searcher:ass_escape(str)
 end
 
 -- Render the REPL and console as an ASS OSD
-function searcher:update()
+function searcher:update(no_match)
+  -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
+
   -- local ass = assdraw.ass_new()
 
   local styles = {
@@ -139,22 +148,21 @@ function searcher:update()
   end
 
   local function get_styles(style)
-    -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
     local style_str = "{\\an%f}{\\bord%f}{\\1c&H%s}{\\fs%f}"
     return string.format(style_str, table.unpack(styles[style]))
   end
 
   local function pointer(i)
     -- FIXME: '   ' in the end of the statement actually doesn't prepend
-    return (i == searcher.list.pointer_i) and self.styles.pointer_icon or '  '
+    return (i == self.list.pointer_i) and self.styles.pointer_icon or '  '
   end
 
   local function get_search_str()
     -- REVIEW: maybe put it to separate func?
     -- form search string PREFIX
     local search_prefix = get_styles('search') ..
-      self.list.pointer_i .. '/' .. #self.list:current() ..
-      '   Select chapter: '
+      (#self.list:current() ~= 0 and self.list.pointer_i or '!') ..
+      '/' .. #self.list:current() .. '   Select chapter: '
 
     local style =
       '{\\r\\fs' .. self.styles.font_size .. '\\bord1}'
@@ -179,7 +187,7 @@ function searcher:update()
     -- ass:append(style .. before_cur .. cglyph .. style .. after_cur)
 
     return search_prefix .. style .. before_cur .. cglyph ..
-      style .. after_cur .. osd_msg_end
+      style .. after_cur .. (no_match and " [Match required]" or "") .. osd_msg_end
 
     -- Redraw the cursor with the REPL text invisible. This will make the
     -- cursor appear in front of the text.
@@ -295,6 +303,8 @@ end
 function searcher:clear()
   self.line = ''
   self.prev_line = ''
+  self.list.current_i = 1
+  self.list.pointer_i = 1
   self.list.filtered = {}
   self.cursor = 1
   self.insert_mode = false
@@ -341,11 +351,13 @@ end
 
 -- Run the current command and clear the line (Enter)
 function searcher:handle_enter()
-  if self.line == '' then
-    local _, val = next(self.list.full) -- get 1st element of the list
-    self:submit(val)
+  if #self.list.full == 0 then return end
+
+  if self.line ~= "" and not next(self.list:current()) then
+    self:update(true)
     return
   end
+
   if self.history[#self.history] ~= self.line then
     self.history[#self.history + 1] = self.line
   end
@@ -571,7 +583,9 @@ function searcher:get_bindings()
     { 'right',       function() self:next_char() end               },
     { 'ctrl+f',      function() self:next_char() end               },
     { 'ctrl+k',      function() self:change_selected_index(-1) end },
+    { 'ctrl+p',      function() self:change_selected_index(-1) end },
     { 'ctrl+j',      function() self:change_selected_index(1) end  },
+    { 'ctrl+n',      function() self:change_selected_index(1) end  },
     { 'up',          function() self:move_history(-1) end          },
     { 'alt+p',       function() self:move_history(-1) end          },
     { 'wheel_up',    function() self:move_history(-1) end          },
@@ -600,7 +614,7 @@ function searcher:get_bindings()
     { 'ctrl+del',    function() self:del_next_word() end           },
     { 'alt+d',       function() self:del_next_word() end           },
     { 'kp_dec',      function() self:handle_char_input('.') end    },
-                                                                }
+  }
 
   for i = 0, 9 do
     bindings[#bindings + 1] =
@@ -646,9 +660,13 @@ end
 -------------------------------------------------------------------------------
 
 function searcher:init(data, submit_fn)
-  self.list.full = data.list
-  self.list.current_i = data.current_i or 0
-  self.list.pointer_i = data.current_i or 0
+  if data and #data.list then
+    self.list.full = data.list
+    self.list.current_i = data.current_i or 1
+    self.list.pointer_i = data.current_i or 1
+  else
+    self.list.full = {}
+  end
 
   -- self.submit = function(self, val) submit_fn() end
   -- TODO: make a fallback for 'mp.command(line)' in case submit_fn() = nil

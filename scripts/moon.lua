@@ -2,9 +2,6 @@
 -- of chapter
 
 -- Possible TODO:
--- add timeout functionality? for now i don't c any reason for CHAPTERS menu
---   but in case u gonna add those - look at how it was coded in yt-quality
--- make it possible to bind several kbds to 'close' event
 --   like in SimpleHistory line 357 function does
 --   mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
 
@@ -17,11 +14,9 @@ local searcher = require "moon-searcher"
 
 local opts = {
   toggle_menu_binding = "g",
-  up_binding          = "Ctrl+k",
-  down_binding        = "Ctrl+j",
 }
 
-local chapter = {list = {}, current_i = nil}
+local chapter = {list = {}, current_i = 0}
 
 -- REVIEW: works?
 (require 'mp.options').read_options(opts, mp.get_script_name())
@@ -29,7 +24,7 @@ local chapter = {list = {}, current_i = nil}
 local function get_chapters()
   local chaptersCount = mp.get_property("chapter-list/count")
   if chaptersCount == 0 then
-    return nil
+    return {}
   else
     local chaptersArr = {}
 
@@ -53,14 +48,17 @@ end
 local function chapter_info_update()
   chapter.list = get_chapters()
 
-  -- so we add one index when we get from mp
-  chapter.current_i = mp.get_property_native("chapter") + 1
-end
+  if not #chapter.list then return end
 
--- keybind to launch menu
-mp.add_key_binding(opts.toggle_menu_binding, "chapters-menu", searcher:init(chapter, submit))
+  -- tho list might b already present, but 'chapter' still might b nil
+  -- and we also add one index when we get from mp
+  chapter.current_i = (mp.get_property_native("chapter") or 0) + 1
+end
 
 -- REVIEW: where is 'a good place' to define all those observers and listeners?
 mp.register_event("file-loaded", chapter_info_update)
 mp.observe_property("chapter-list/count", "number", chapter_info_update)
 mp.observe_property("chapter", "number", chapter_info_update)
+
+-- keybind to launch menu
+mp.add_key_binding(opts.toggle_menu_binding, "chapters-menu", function() searcher:init(chapter, submit) end)
