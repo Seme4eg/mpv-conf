@@ -1,15 +1,32 @@
 -- TODO:
 -- throw an error in console if any of required handlers were not passed
-
+-- if there are no chapters - draw a menu with 'no chaps' text styled
+  -- differently
 
 local mp = require 'mp'
 -- local msg = require 'mp.msg'
 local utils = require 'mp.utils'
 
-local assdraw = require 'mp.assdraw'
+-- TODO: better way of using assdraw?:
+-- https://github.com/mpv-player/mpv/blob/master/player/lua/assdraw.lua :
+-- local assdraw = require 'mp.assdraw' (original way to do it in this script)
+-- mp.set_ods_ass(0, 0, msg)
+-- or
+-- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format) :
+local assdraw = mp.create_osd_overlay("ass-events")
+
 
 local searcher = {
+  is_active = false,
+
+  list = {
+    full = {}, filtered = {}, current_i = nil, pointer_i = nil
+  },
+
   line = '',
+  -- if there was no cursor it wouldn't have been needed, but for now we need
+  -- variable below only to compare it with 'line' and see if we need to filter
+  prev_line = '',
   cursor = 1,
   history = {},
   history_pos = 1,
@@ -17,9 +34,32 @@ local searcher = {
   insert_mode = false,
   styles = {
     font_size = 18,
+    pointer_icon = "▶ ",
+    current_color = "aaaaaa"
   },
   handlers = {},
 }
+
+-- FIXME: how to make this function a variable in the above object?
+function searcher.list:current()
+  return next(self.list.filtered) and self.list.filtered or self.list.full
+end
+
+function searcher:change_selected_index(num)
+  self.list.pointer_i = self.list.pointer_i + num
+  if self.list.pointer_i < 1 then self.list.pointer_i = #self.list.full
+  elseif self.list.pointer_i > #self.list.full then self.list.pointer_i = 1 end
+  self:update()
+end
+
+function searcher.list:filter()
+  local result = {}
+  for _,v in ipairs(self.list.full) do
+    if not not string.find(v.title, self.line) then table.insert(result, v) end
+  end
+  self.list.filtered = result
+end
+
 
 --[[
   The below code is a modified implementation of text input from mpv's console.lua:
@@ -79,41 +119,113 @@ end
 
 -- Render the REPL and console as an ASS OSD
 function searcher:update()
-  local ass = assdraw.ass_new()
+  -- local ass = assdraw.ass_new()
 
-  local style =
-    '{\\r\\fs' .. self.styles.font_size .. '\\bord1}'
+  local styles = {
+    -- Values in tables below accordingly: alignment, border, color
+    search = {7, 1, '2153b0', 18},
+    -- REVIEW: better name for that list? plain? just_text? common?
+    text = {7, 1, 'ffffff', 18},
+    current = {7, 1, 'aaaaaa', 18},
+    -- 'hover' = {7, 1, 'aaaaaa'},
+  }
+  -- to reset text color after each iteration
+	local osd_msg_end = "\\h\\N\\N{\\1c&HFFFFFF}"
 
-  -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
-  -- inline with the surrounding text, but it sets the advance to the width
-  -- of the drawing. So the cursor doesn't affect layout too much, make it as
-  -- thin as possible and make it appear to be 1px wide by giving it 0.5px
-  -- horizontal borders.
-  local cheight = self.styles.font_size * 8
-  local cglyph = '{\\r' ..
-    '{\\1a&H44&\\3a&H44&\\4a&H99&' ..
-    '\\1c&Heeeeee&\\3c&Heeeeee&\\4c&H000000&' ..
-    '\\xbord0.5\\ybord0\\xshad0\\yshad1\\p4\\pbo24}' ..
-    'm 0 0 l 1 0 l 1 ' .. cheight .. ' l 0 ' .. cheight ..
-    '{\\p0}'
-  local before_cur = self:ass_escape(self.line:sub(1, self.cursor - 1))
-  local after_cur = self:ass_escape(self.line:sub(self.cursor))
+  -- filter list if 'line' was changed
+  if self.line ~= self.prev_line then
+    self.list:filter()
+    self.prev_line = self.line
+  end
 
-  ass:new_event()
-  ass:an(1)
-  ass:append(style .. before_cur .. cglyph .. style .. after_cur)
+  local function get_styles(style)
+    -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
+    local style_str = "{\\an%f}{\\bord%f}{\\1c&H%s}{\\fs%f}"
+    return string.format(style_str, table.unpack(styles[style]))
+  end
 
-  -- Redraw the cursor with the REPL text invisible. This will make the
-  -- cursor appear in front of the text.
-  -- ass:new_event()
-  -- ass:an(1)
-  -- ass:append(style .. '{\\alpha&HFF&}> ' .. before_cur)
-  -- ass:append(cglyph)
-  -- ass:append(style .. '{\\alpha&HFF&}' .. after_cur)
+  local function pointer(i)
+    -- FIXME: '   ' in the end of the statement actually doesn't prepend
+    return (i == searcher.list.pointer_i) and self.styles.pointer_icon or '  '
+  end
 
-  self.handlers.input(ass.text, before_cur..after_cur)
+  local function get_search_str()
+    -- REVIEW: maybe put it to separate func?
+    -- form search string PREFIX
+    local search_prefix = get_styles('search') ..
+      self.list.pointer_i .. '/' .. #self.list:current() ..
+      '   Select chapter: '
+
+    local style =
+      '{\\r\\fs' .. self.styles.font_size .. '\\bord1}'
+
+    -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
+    -- inline with the surrounding text, but it sets the advance to the width
+    -- of the drawing. So the cursor doesn't affect layout too much, make it as
+    -- thin as possible and make it appear to be 1px wide by giving it 0.5px
+    -- horizontal borders.
+    local cheight = self.styles.font_size * 8
+    local cglyph = '{\\r' ..
+      '{\\1a&H44&\\3a&H44&\\4a&H99&' ..
+      '\\1c&Heeeeee&\\3c&Heeeeee&\\4c&H000000&' ..
+      '\\xbord0.5\\ybord0\\xshad0\\yshad1\\p4\\pbo24}' ..
+      'm 0 0 l 1 0 l 1 ' .. cheight .. ' l 0 ' .. cheight ..
+      '{\\p0}'
+    local before_cur = self:ass_escape(self.line:sub(1, self.cursor - 1))
+    local after_cur = self:ass_escape(self.line:sub(self.cursor))
+
+    -- ass:new_event()
+    -- ass:an(1)
+    -- ass:append(style .. before_cur .. cglyph .. style .. after_cur)
+
+    return search_prefix .. style .. before_cur .. cglyph ..
+      style .. after_cur .. osd_msg_end
+
+    -- Redraw the cursor with the REPL text invisible. This will make the
+    -- cursor appear in front of the text.
+    -- ass:new_event()
+    -- ass:an(1)
+    -- ass:append(style .. '{\\alpha&HFF&}> ' .. before_cur)
+    -- ass:append(cglyph)
+    -- ass:append(style .. '{\\alpha&HFF&}' .. after_cur)
+
+  end
+
+  local function get_list_str()
+    local list_str = ''
+
+    for i,v in ipairs(self.list:current()) do
+      local style = (self.list.current_i == v.index) and 'current' or 'text'
+      list_str = list_str .. get_styles(style) .. pointer(i) .. v.title .. osd_msg_end
+    end
+
+    return list_str
+  end
+
+  assdraw.data = get_search_str() .. get_list_str()
+
+  if self.is_active then assdraw:update() else assdraw:remove() end
 
   -- return ass.text
+end
+
+-- Set the REPL visibility ("enable", Esc)
+function searcher:set_active(active)
+  if active == self.is_active then return end
+  if active then
+    self.is_active = true
+    self.insert_mode = false
+    -- mp.enable_key_bindings('console-input', 'allow-hide-cursor+allow-vo-dragging')
+    mp.enable_messages('terminal-default')
+    self:define_key_bindings()
+  else
+    self.is_active = false
+    self:undefine_key_bindings()
+    self:clear()
+    -- mp.enable_messages('silent:terminal-default')
+    collectgarbage()
+  end
+  self:update()
 end
 
 -- Naive helper function to find the next UTF-8 character in 'str' after 'pos'
@@ -182,6 +294,8 @@ end
 -- Clear the current line (Ctrl+C)
 function searcher:clear()
   self.line = ''
+  self.prev_line = ''
+  self.list.filtered = {}
   self.cursor = 1
   self.insert_mode = false
   self.history_pos = #self.history + 1
@@ -228,22 +342,26 @@ end
 -- Run the current command and clear the line (Enter)
 function searcher:handle_enter()
   if self.line == '' then
+    local _, val = next(self.list.full) -- get 1st element of the list
+    self:submit(val)
     return
   end
   if self.history[#self.history] ~= self.line then
     self.history[#self.history + 1] = self.line
   end
 
+  -- TODO: which key? ^-^
   -- match "help [<text>]", return <text> or "", strip all whitespace
   local help = self.line:match('^%s*help%s+(.-)%s*$') or
     (self.line:match('^%s*help$') and '')
   if help then
     self:help_command(help)
   else
-    mp.command(self.line)
+    -- mp.command(self.line)
+    self:submit(self.list:current()[self.list.pointer_i])
   end
 
-  self:clear()
+  self:set_active(false)
 end
 
 -- Go to the specified position in the command history
@@ -434,53 +552,55 @@ end
 -- bindings and readline bindings.
 function searcher:get_bindings()
   local bindings = {
-    { 'ctrl+[',      function() self:exit() end                 },
-    { 'ctrl+g',      function() self:exit() end                 },
-    { 'esc',         function() self:exit() end                 },
-    { 'enter',       function() self:handle_enter() end         },
-    { 'kp_enter',    function() self:handle_enter() end         },
-    { 'ctrl+m',      function() self:handle_enter() end         },
-    { 'bs',          function() self:handle_backspace() end     },
-    { 'shift+bs',    function() self:handle_backspace() end     },
-    { 'ctrl+h',      function() self:handle_backspace() end     },
-    { 'del',         function() self:handle_del() end           },
-    { 'shift+del',   function() self:handle_del() end           },
-    { 'ins',         function() self:handle_ins() end           },
-    { 'shift+ins',   function() self:paste(false) end           },
-    { 'mbtn_mid',    function() self:paste(false) end           },
-    { 'left',        function() self:prev_char() end            },
-    { 'ctrl+b',      function() self:prev_char() end            },
-    { 'right',       function() self:next_char() end            },
-    { 'ctrl+f',      function() self:next_char() end            },
-    { 'up',          function() self:move_history(-1) end       },
-    { 'alt+p',       function() self:move_history(-1) end       },
-    { 'wheel_up',    function() self:move_history(-1) end       },
-    { 'down',        function() self:move_history(1) end        },
-    { 'alt+n',       function() self:move_history(1) end        },
-    { 'wheel_down',  function() self:move_history(1) end        },
-    { 'wheel_left',  function() end                             },
-    { 'wheel_right', function() end                             },
-    { 'ctrl+left',   function() self:prev_word() end            },
-    { 'alt+b',       function() self:prev_word() end            },
-    { 'ctrl+right',  function() self:next_word() end            },
-    { 'alt+f',       function() self:next_word() end            },
-    { 'ctrl+a',      function() self:go_home() end              },
-    { 'home',        function() self:go_home() end              },
-    { 'ctrl+e',      function() self:go_end() end               },
-    { 'end',         function() self:go_end() end               },
-    { 'pgup',        function() self:handle_pgup() end          },
-    { 'pgdwn',       function() self:handle_pgdown() end        },
-    { 'ctrl+c',      function() self:clear() end                },
-    { 'ctrl+d',      function() self:handle_del() end           },
-    { 'ctrl+u',      function() self:del_to_start() end         },
-    { 'ctrl+v',      function() self:paste(true) end            },
-    { 'meta+v',      function() self:paste(true) end            },
-    { 'ctrl+bs',     function() self:del_word() end             },
-    { 'ctrl+w',      function() self:del_word() end             },
-    { 'ctrl+del',    function() self:del_next_word() end        },
-    { 'alt+d',       function() self:del_next_word() end        },
-    { 'kp_dec',      function() self:handle_char_input('.') end },
-  }
+    { 'ctrl+[',      function() self:set_active(false) end         },
+    { 'ctrl+g',      function() self:set_active(false) end         },
+    { 'esc',         function() self:set_active(false) end         },
+    { 'enter',       function() self:handle_enter() end            },
+    { 'kp_enter',    function() self:handle_enter() end            },
+    { 'ctrl+m',      function() self:handle_enter() end            },
+    { 'bs',          function() self:handle_backspace() end        },
+    { 'shift+bs',    function() self:handle_backspace() end        },
+    { 'ctrl+h',      function() self:handle_backspace() end        },
+    { 'del',         function() self:handle_del() end              },
+    { 'shift+del',   function() self:handle_del() end              },
+    { 'ins',         function() self:handle_ins() end              },
+    { 'shift+ins',   function() self:paste(false) end              },
+    { 'mbtn_mid',    function() self:paste(false) end              },
+    { 'left',        function() self:prev_char() end               },
+    { 'ctrl+b',      function() self:prev_char() end               },
+    { 'right',       function() self:next_char() end               },
+    { 'ctrl+f',      function() self:next_char() end               },
+    { 'ctrl+k',      function() self:change_selected_index(-1) end },
+    { 'ctrl+j',      function() self:change_selected_index(1) end  },
+    { 'up',          function() self:move_history(-1) end          },
+    { 'alt+p',       function() self:move_history(-1) end          },
+    { 'wheel_up',    function() self:move_history(-1) end          },
+    { 'down',        function() self:move_history(1) end           },
+    { 'alt+n',       function() self:move_history(1) end           },
+    { 'wheel_down',  function() self:move_history(1) end           },
+    { 'wheel_left',  function() end                                },
+    { 'wheel_right', function() end                                },
+    { 'ctrl+left',   function() self:prev_word() end               },
+    { 'alt+b',       function() self:prev_word() end               },
+    { 'ctrl+right',  function() self:next_word() end               },
+    { 'alt+f',       function() self:next_word() end               },
+    { 'ctrl+a',      function() self:go_home() end                 },
+    { 'home',        function() self:go_home() end                 },
+    { 'ctrl+e',      function() self:go_end() end                  },
+    { 'end',         function() self:go_end() end                  },
+    { 'pgup',        function() self:handle_pgup() end             },
+    { 'pgdwn',       function() self:handle_pgdown() end           },
+    { 'ctrl+c',      function() self:clear() end                   },
+    { 'ctrl+d',      function() self:handle_del() end              },
+    { 'ctrl+u',      function() self:del_to_start() end            },
+    { 'ctrl+v',      function() self:paste(true) end               },
+    { 'meta+v',      function() self:paste(true) end               },
+    { 'ctrl+bs',     function() self:del_word() end                },
+    { 'ctrl+w',      function() self:del_word() end                },
+    { 'ctrl+del',    function() self:del_next_word() end           },
+    { 'alt+d',       function() self:del_next_word() end           },
+    { 'kp_dec',      function() self:handle_char_input('.') end    },
+                                                                }
 
   for i = 0, 9 do
     bindings[#bindings + 1] =
@@ -525,12 +645,18 @@ end
 --                           END ORIGINAL MPV CODE                           --
 -------------------------------------------------------------------------------
 
-function searcher:init(input_fn, submit_fn, exit_fn, styles)
-  self.handlers = {input = input_fn, submit = submit_fn, exit = exit_fn}
+function searcher:init(data, submit_fn)
+  self.list.full = data.list
+  self.list.current_i = data.current_i or 0
+  self.list.pointer_i = data.current_i or 0
 
-  for i,v in pairs(styles or {}) do self.styles[i] = v end
+  -- self.submit = function(self, val) submit_fn() end
+  -- TODO: make a fallback for 'mp.command(line)' in case submit_fn() = nil
+  function self:submit(val) submit_fn(val) end
 
-  self:define_key_bindings()
+  -- TODO: decide with filter_fn
+
+  self:set_active(true)
 end
 
 function searcher:exit()
