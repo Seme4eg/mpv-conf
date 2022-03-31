@@ -7,19 +7,16 @@
     -- close_on_load_file = true,
     -- pause_on_start = true,
     -- resume_on_stop = "only-if-did-pause",
+-- look through every function on the subject of possible nil values (i/o), error
+  -- handling and where it is even needed
+-- look through every function on the subject of moving some var to global opts
 
 local mp = require 'mp'
 -- local msg = require 'mp.msg'
 local utils = require 'mp.utils'
-
--- TODO: better way of using assdraw?:
--- https://github.com/mpv-player/mpv/blob/master/player/lua/assdraw.lua :
--- local assdraw = require 'mp.assdraw' (original way to do it in this script)
--- mp.set_ods_ass(0, 0, msg)
--- or
--- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format) :
-local assdraw = mp.create_osd_overlay("ass-events")
-
+local assdraw = require 'mp.assdraw'
+-- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format)
+local ass_events = mp.create_osd_overlay("ass-events")
 
 local searcher = {
   is_active = false,
@@ -37,8 +34,8 @@ local searcher = {
   history_pos = 1,
   key_bindings = {},
   insert_mode = false,
+  -- TODO: merge this object with the one in 'update' func
   styles = {
-    font_size = 18,
     pointer_icon = "▶ ",
     current_color = "aaaaaa"
   },
@@ -128,18 +125,21 @@ end
 function searcher:update(no_match)
   -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
 
-  -- local ass = assdraw.ass_new()
-
+  -- TODO: move it to 'searcher' obj
   local styles = {
+    font_size = 21,
+    line_alignment = 7,
     -- Values in tables below accordingly: alignment, border, color
-    search = {7, 1, '2153b0', 18},
-    -- REVIEW: better name for that list? plain? just_text? common?
-    text = {7, 1, 'ffffff', 18},
-    current = {7, 1, 'aaaaaa', 18},
-    -- 'hover' = {7, 1, 'aaaaaa'},
+    text_color = {
+      default = 'ffffff',
+      -- search = 'fcc779',
+      search = 'ff7c68',
+      current = 'aaaaaa',
+    }
   }
-  -- to reset text color after each iteration
-	local osd_msg_end = "\\h\\N\\N{\\1c&HFFFFFF}"
+  local ww, wh = mp.get_osd_size()
+  local menu_y_offset = wh - (35 * wh / 100)
+  local menu_x_padding = 5
 
   -- filter list if 'line' was changed
   if self.line ~= self.prev_line then
@@ -148,47 +148,59 @@ function searcher:update(no_match)
   end
 
   local function get_styles(style)
-    local style_str = "{\\an%f}{\\bord%f}{\\1c&H%s}{\\fs%f}"
-    return string.format(style_str, table.unpack(styles[style]))
+    local a = assdraw.ass_new()
+    a:an(styles.line_alignment)
+    a:append('{\\bord0}')
+    a:append('{\\1c&H' .. styles.text_color[style] .. '}')
+    a:append('{\\fs' .. styles.font_size .. '}')
+    return a.text
   end
 
-  local function pointer(i)
-    -- FIXME: '   ' in the end of the statement actually doesn't prepend
-    return (i == self.list.pointer_i) and self.styles.pointer_icon or '  '
+  local function get_background_str()
+    local a = assdraw.ass_new()
+    a:new_event()
+    a:append('{\\an7\\bord0\\shad0}')
+    a:append('{\\1c&H1c1c1c\\1a&H19}') -- background color & opacity
+    a:pos(0, 0)
+    a:draw_start()
+    a:rect_cw(0, menu_y_offset, ww, wh)
+    a:draw_stop()
+    return a.text
   end
 
   local function get_search_str()
-    -- REVIEW: maybe put it to separate func?
+    local a = assdraw.ass_new()
+    local default_style = '{\\r\\fs' .. styles.font_size .. '\\bord0}'
+
+    a:new_event()
+    a:append('{\\an7\\bord0\\shad0}')
+    a:pos(menu_x_padding, menu_y_offset + 2) -- taking 2 pixels padding from top
+
     -- form search string PREFIX
     local search_prefix = get_styles('search') ..
       (#self.list:current() ~= 0 and self.list.pointer_i or '!') ..
-      '/' .. #self.list:current() .. '   Select chapter: '
-
-    local style =
-      '{\\r\\fs' .. self.styles.font_size .. '\\bord1}'
+      '/' .. #self.list:current() .. '  Select chapter: '
 
     -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
     -- inline with the surrounding text, but it sets the advance to the width
     -- of the drawing. So the cursor doesn't affect layout too much, make it as
     -- thin as possible and make it appear to be 1px wide by giving it 0.5px
     -- horizontal borders.
-    local cheight = self.styles.font_size * 8
-    local cglyph = '{\\r' ..
-      '{\\1a&H44&\\3a&H44&\\4a&H99&' ..
-      '\\1c&Heeeeee&\\3c&Heeeeee&\\4c&H000000&' ..
-      '\\xbord0.5\\ybord0\\xshad0\\yshad1\\p4\\pbo24}' ..
-      'm 0 0 l 1 0 l 1 ' .. cheight .. ' l 0 ' .. cheight ..
+    local cheight = styles.font_size * 8
+    local cglyph = '{\\r' .. -- styles reset
+      '\\1c&Hffffff&\\3c&Hffffff' .. -- font color and border color
+      '\\xbord0.3\\p4\\pbo24}' .. -- xborder, scale x8 and baseline offset
+      'm 0 0 l 0 ' .. cheight .. -- drawing just a line
       '{\\p0}'
     local before_cur = self:ass_escape(self.line:sub(1, self.cursor - 1))
     local after_cur = self:ass_escape(self.line:sub(self.cursor))
 
-    -- ass:new_event()
-    -- ass:an(1)
-    -- ass:append(style .. before_cur .. cglyph .. style .. after_cur)
+    a:append(table.concat({
+                 search_prefix, default_style, before_cur, cglyph, default_style,
+                 after_cur, (no_match and " [Match required]" or "")
+    }))
 
-    return search_prefix .. style .. before_cur .. cglyph ..
-      style .. after_cur .. (no_match and " [Match required]" or "") .. osd_msg_end
-
+    return a.text
     -- Redraw the cursor with the REPL text invisible. This will make the
     -- cursor appear in front of the text.
     -- ass:new_event()
@@ -200,21 +212,47 @@ function searcher:update(no_match)
   end
 
   local function get_list_str()
-    local list_str = ''
+    local a = assdraw.ass_new()
+    a:append('{\\an7\\bord0\\shad0}')
 
-    for i,v in ipairs(self.list:current()) do
-      local style = (self.list.current_i == v.index) and 'current' or 'text'
-      list_str = list_str .. get_styles(style) .. pointer(i) .. v.title .. osd_msg_end
+    -- FIXME: all previous lines colour gets affeted somehow by this func
+    local function highlighting(y)
+      a:new_event()
+      a:append('{\\an7\\bord0\\shad0}')
+      a:append('{\\1c&Hffffff\\1a&HE6}') -- background color & opacity
+      a:pos(0, 0)
+      a:draw_start()
+      a:rect_cw(0, y, ww, y + styles.font_size)
+      a:draw_stop()
+      a:append('{\\r}') -- reset styles
+      return a.text
     end
 
-    return list_str
+    for i,v in ipairs(self.list:current()) do
+      local y_offset = menu_y_offset + menu_x_padding + ((styles.font_size + 1) * i)
+      local style = (self.list.current_i == v.index) and 'current' or 'default'
+
+      if i == self.list.pointer_i then a:append(highlighting(y_offset)) end
+
+      a:new_event()
+      a:pos(menu_x_padding, y_offset)
+      a:append(get_styles(style))
+      a:append(v.title)
+    end
+
+    return a.text
   end
 
-  assdraw.data = get_search_str() .. get_list_str()
+  ass_events.res_x = ww
+  ass_events.res_y = wh
+  ass_events.data = table.concat({
+      get_background_str(),
+      get_search_str(),
+      get_list_str()
+  }, "\n")
 
-  if self.is_active then assdraw:update() else assdraw:remove() end
+  if self.is_active then ass_events:update() else ass_events:remove() end
 
-  -- return ass.text
 end
 
 -- Set the REPL visibility ("enable", Esc)
@@ -659,6 +697,13 @@ end
 --                           END ORIGINAL MPV CODE                           --
 -------------------------------------------------------------------------------
 
+-- params:
+--  - data : {list: {}, [current_] : num}
+--  - submit callback
+--  - [filter callback] - data might have different fields
+--  - TODO: [refresh function] - in case we catch data update in main script
+--    while searcher is initiated and prob. visible - call this function passed
+--    from the outside script to refresh the inner state of the 'searcher'
 function searcher:init(data, submit_fn)
   if data and #data.list then
     self.list.full = data.list
@@ -682,5 +727,35 @@ function searcher:exit()
   self.handlers.exit()
   collectgarbage()
 end
+
+-- TODO: write some idle func like this
+-- function idle()
+--     if pending_selection then
+--         gallery:set_selection(pending_selection)
+--         pending_selection = nil
+--     end
+--     if ass_changed or geometry_changed then
+--         local ww, wh = mp.get_osd_size()
+--         if geometry_changed then
+--             geometry_changed = false
+--             compute_geometry(ww, wh)
+--         end
+--         if ass_changed then
+--             ass_changed = false
+--             mp.set_osd_ass(ww, wh, ass)
+--         end
+--     end
+-- end
+-- ...
+-- and handle it as follows
+-- init():
+    -- mp.register_idle(idle)
+    -- idle()
+-- exit():
+    -- mp.unregister_idle(idle)
+    -- idle()
+-- And in these observers he is setting a flag, that's being checked in func above
+-- mp.observe_property("osd-width", "native", mark_geometry_stale)
+-- mp.observe_property("osd-height", "native", mark_geometry_stale)
 
 return searcher
