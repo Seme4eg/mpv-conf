@@ -104,6 +104,7 @@ opts = {
     REMOVE    = "DEL",
     FLAG      = "SPACE",
 }
+
 function reload_config()
     gallery.config.background_color = opts.background_color
     gallery.config.background_opacity = opts.background_opacity
@@ -133,9 +134,8 @@ function reload_config()
         gallery:ass_refresh(true, true, true, true)
     end
 end
+
 options.read_options(opts, mp.get_script_name(), reload_config)
-
-
 
 local sha256
 --[[
@@ -244,9 +244,7 @@ function teardown_ui_handlers()
 end
 
 function reload_bindings()
-    if gallery.active then
-        teardown_ui_handlers()
-    end
+    if gallery.active then teardown_ui_handlers() end
 
     bindings = {}
     bindings_repeat = {}
@@ -406,6 +404,11 @@ function get_geometry_function()
                 new_geom.thumbnail_size[2] = math.floor(new_geom.thumbnail_size[2])
             end
         end
+        mp.msg.info(
+            new_geom.gallery_position[1], new_geom.gallery_position[2],
+            new_geom.gallery_size[1], new_geom.gallery_size[2],
+            new_geom.min_spacing[1], new_geom.min_spacing[2],
+            new_geom.thumbnail_size[1], new_geom.thumbnail_size[2], 'GL')
         gallery:set_geometry(
             new_geom.gallery_position[1], new_geom.gallery_position[2],
             new_geom.gallery_size[1], new_geom.gallery_size[2],
@@ -546,7 +549,8 @@ end
 
 function stop()
     if not gallery.active then return end
-    if opts.resume_on_stop == "yes" or (opts.resume_on_stop == "only-if-did-pause" and did_pause) then
+    if opts.resume_on_stop == "yes" or
+      (opts.resume_on_stop == "only-if-did-pause" and did_pause) then
         mp.set_property_bool("pause", false)
     end
     if opts.command_on_close ~= "" then
