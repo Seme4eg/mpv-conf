@@ -20,9 +20,10 @@ local ass_events = mp.create_osd_overlay("ass-events")
 
 local searcher = {
   is_active = false,
+  lines_to_show = 17, -- NOT including search line
 
   list = {
-    full = {}, filtered = {}, current_i = 1, pointer_i = 1
+    full = {}, filtered = {}, current_i = 1, pointer_i = 1, show_from_to = {}
   },
 
   line = '',
@@ -34,11 +35,6 @@ local searcher = {
   history_pos = 1,
   key_bindings = {},
   insert_mode = false,
-  -- TODO: merge this object with the one in 'update' func
-  styles = {
-    pointer_icon = "▶ ",
-    current_color = "aaaaaa"
-  },
   handlers = {},
 }
 
@@ -58,10 +54,61 @@ function searcher.list:filter()
   searcher.list.filtered = result
 end
 
+function searcher.list:set_from_to(reset_flag)
+  -- additional variables just for shorter var name
+  local i = searcher.list.pointer_i
+  local total = searcher.lines_to_show
+
+  -- If current list length is lower than 'lines_to_show' prop - show all
+  if total > #searcher.list:current() then
+    searcher.list.show_from_to = {1, #searcher.list:current()}
+    return
+  end
+
+  if reset_flag then
+    searcher.list.show_from_to = {1, total}
+    return
+  end
+
+  -- if show_from_to length is 0 - it is first call of this func in cur. init
+  if #searcher.list.show_from_to == 0 then
+    local lines_above = math.ceil(total / 2)
+    if i < lines_above then
+      searcher.list.show_from_to = {1, total}
+    else
+      -- set show_from_to so chosen item will be displayed close to middle
+      searcher.list.show_from_to = {
+        i - lines_above + 1,
+        i - lines_above + total
+      }
+    end
+  else
+    local first, last = table.unpack(searcher.list.show_from_to)
+
+    -- handle cursor moving towards start / end bondary
+    if first ~= 1 and i - first < 2 then
+      searcher.list.show_from_to = {first - 1, last - 1}
+    end
+    if last ~= #searcher.list:current() and last - i < 2 then
+      searcher.list.show_from_to = {first + 1, last + 1}
+    end
+
+    -- handle index jumps from beg to end and backwards
+    if i > last then
+      searcher.list.show_from_to = {i - total + 1, i}
+    end
+    if i < first then searcher.list.show_from_to = {1, total} end
+  end
+end
+
 function searcher:change_selected_index(num)
   self.list.pointer_i = self.list.pointer_i + num
-  if self.list.pointer_i < 1 then self.list.pointer_i = #self.list:current()
-  elseif self.list.pointer_i > #self.list:current() then self.list.pointer_i = 1 end
+  if self.list.pointer_i < 1 then
+    self.list.pointer_i = #self.list:current()
+  elseif self.list.pointer_i > #self.list:current() then
+    self.list.pointer_i = 1
+  end
+  self.list:set_from_to()
   self:update()
 end
 
@@ -122,62 +169,75 @@ function searcher:ass_escape(str)
 end
 
 -- Render the REPL and console as an ASS OSD
-function searcher:update(no_match)
+function searcher:update(no_match_error)
   -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
+
+  -- do not bother if function was called to close the menu..
+  if not self.is_active then
+    ass_events:remove()
+    return
+  end
 
   -- TODO: move it to 'searcher' obj
   local styles = {
     font_size = 21,
     line_alignment = 7,
-    -- Values in tables below accordingly: alignment, border, color
+    line_bottom_margin = 1,
     text_color = {
       default = 'ffffff',
-      -- search = 'fcc779',
       search = 'ff7c68',
       current = 'aaaaaa',
     }
   }
-  local ww, wh = mp.get_osd_size()
-  local menu_y_offset = wh - (35 * wh / 100)
+  local line_height = styles.font_size + styles.line_bottom_margin
+
+  local ww, wh = mp.get_osd_size() -- window width & height
   local menu_x_padding = 5
+  local menu_y_padding = 2
+  -- + 1 below is a search string
+  local menu_y_pos = wh - (line_height * (self.lines_to_show + 1) + menu_y_padding * 2)
 
   -- filter list if 'line' was changed
   if self.line ~= self.prev_line then
     self.list:filter()
     self.prev_line = self.line
+    searcher.list:set_from_to(true)
   end
 
-  local function get_styles(style)
+  -- TODO: any way to make it just 'styles.default' prop? (__get??)
+  -- or redefine assdraw:new_event() to call a.append these default styles..
+  function styles:default()
     local a = assdraw.ass_new()
-    a:an(styles.line_alignment)
-    a:append('{\\bord0}')
-    a:append('{\\1c&H' .. styles.text_color[style] .. '}')
+    -- alignment top left, border 0, shadow 0
+    a:append('{\\an7\\bord0\\shad0}')
     a:append('{\\fs' .. styles.font_size .. '}')
     return a.text
+  end
+
+  local function get_font_color(style)
+    return '{\\1c&H' .. styles.text_color[style] .. '}'
   end
 
   local function get_background_str()
     local a = assdraw.ass_new()
     a:new_event()
-    a:append('{\\an7\\bord0\\shad0}')
+    a:append(styles:default())
     a:append('{\\1c&H1c1c1c\\1a&H19}') -- background color & opacity
     a:pos(0, 0)
     a:draw_start()
-    a:rect_cw(0, menu_y_offset, ww, wh)
+    a:rect_cw(0, menu_y_pos, ww, wh)
     a:draw_stop()
     return a.text
   end
 
   local function get_search_str()
     local a = assdraw.ass_new()
-    local default_style = '{\\r\\fs' .. styles.font_size .. '\\bord0}'
 
     a:new_event()
-    a:append('{\\an7\\bord0\\shad0}')
-    a:pos(menu_x_padding, menu_y_offset + 2) -- taking 2 pixels padding from top
+    a:append(styles:default())
+    a:pos(menu_x_padding, menu_y_pos + menu_y_padding)
 
-    -- form search string PREFIX
-    local search_prefix = get_styles('search') ..
+    local search_prefix = get_font_color('search') ..
       (#self.list:current() ~= 0 and self.list.pointer_i or '!') ..
       '/' .. #self.list:current() .. '  Select chapter: '
 
@@ -187,20 +247,25 @@ function searcher:update(no_match)
     -- thin as possible and make it appear to be 1px wide by giving it 0.5px
     -- horizontal borders.
     local cheight = styles.font_size * 8
+    -- TODO: maybe do it using draw_rect from ass?
     local cglyph = '{\\r' .. -- styles reset
       '\\1c&Hffffff&\\3c&Hffffff' .. -- font color and border color
       '\\xbord0.3\\p4\\pbo24}' .. -- xborder, scale x8 and baseline offset
       'm 0 0 l 0 ' .. cheight .. -- drawing just a line
-      '{\\p0}'
+      '{\\p0\\r}' -- finish drawing and reset styles
     local before_cur = self:ass_escape(self.line:sub(1, self.cursor - 1))
     local after_cur = self:ass_escape(self.line:sub(self.cursor))
 
     a:append(table.concat({
-                 search_prefix, default_style, before_cur, cglyph, default_style,
-                 after_cur, (no_match and " [Match required]" or "")
+                 search_prefix, get_font_color('default'), before_cur,
+                 cglyph, styles:default(), get_font_color('default'),
+                 after_cur, (no_match_error and " [Match required]" or "")
     }))
 
     return a.text
+
+    -- NOTE: perhaps this commented code will some day help me in coding cursor
+    -- like in M-x emacs menu:
     -- Redraw the cursor with the REPL text invisible. This will make the
     -- cursor appear in front of the text.
     -- ass:new_event()
@@ -208,36 +273,37 @@ function searcher:update(no_match)
     -- ass:append(style .. '{\\alpha&HFF&}> ' .. before_cur)
     -- ass:append(cglyph)
     -- ass:append(style .. '{\\alpha&HFF&}' .. after_cur)
-
   end
 
   local function get_list_str()
     local a = assdraw.ass_new()
-    a:append('{\\an7\\bord0\\shad0}')
 
-    -- FIXME: all previous lines colour gets affeted somehow by this func
-    local function highlighting(y)
+    local function apply_highlighting(y)
       a:new_event()
-      a:append('{\\an7\\bord0\\shad0}')
+      a:append(styles:default())
       a:append('{\\1c&Hffffff\\1a&HE6}') -- background color & opacity
       a:pos(0, 0)
       a:draw_start()
       a:rect_cw(0, y, ww, y + styles.font_size)
       a:draw_stop()
-      a:append('{\\r}') -- reset styles
-      return a.text
     end
 
-    for i,v in ipairs(self.list:current()) do
-      local y_offset = menu_y_offset + menu_x_padding + ((styles.font_size + 1) * i)
-      local style = (self.list.current_i == v.index) and 'current' or 'default'
+    -- REVIEW: how to use something like table.unpack below?
+    for i=self.list.show_from_to[1], self.list.show_from_to[2] do
+      -- 'i' above in 'for' is index of menu line, this one is index of an item
+      -- in current list
+      local value = self.list:current()[i]
+      local y_offset = menu_y_pos + menu_x_padding +
+        (line_height * (i - self.list.show_from_to[1] + 1))
+      local style = (self.list.current_i == value.index) and 'current' or 'default'
 
-      if i == self.list.pointer_i then a:append(highlighting(y_offset)) end
+      if i == self.list.pointer_i then apply_highlighting(y_offset) end
 
       a:new_event()
+      a:append(styles:default())
       a:pos(menu_x_padding, y_offset)
-      a:append(get_styles(style))
-      a:append(v.title)
+      a:append(get_font_color(style))
+      a:append(value.title)
     end
 
     return a.text
@@ -251,7 +317,7 @@ function searcher:update(no_match)
       get_list_str()
   }, "\n")
 
-  if self.is_active then ass_events:update() else ass_events:remove() end
+  ass_events:update()
 
 end
 
@@ -344,6 +410,7 @@ function searcher:clear()
   self.list.current_i = 1
   self.list.pointer_i = 1
   self.list.filtered = {}
+  self.list.show_from_to = {}
   self.cursor = 1
   self.insert_mode = false
   self.history_pos = #self.history + 1
@@ -389,7 +456,10 @@ end
 
 -- Run the current command and clear the line (Enter)
 function searcher:handle_enter()
-  if #self.list.full == 0 then return end
+  if #self.list.full == 0 then
+    self:update(true)
+    return
+  end
 
   if self.line ~= "" and not next(self.list:current()) then
     self:update(true)
@@ -709,8 +779,11 @@ function searcher:init(data, submit_fn)
     self.list.full = data.list
     self.list.current_i = data.current_i or 1
     self.list.pointer_i = data.current_i or 1
+    self.list:set_from_to()
   else
+    -- FIXME: doesn't work
     self.list.full = {}
+    self.list:set_from_to()
   end
 
   -- self.submit = function(self, val) submit_fn() end
