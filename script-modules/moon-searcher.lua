@@ -1,26 +1,38 @@
 -- TODO:
--- throw an error in console if any of required handlers were not passed
--- if there are no chapters - draw a menu with 'no chaps' text styled
-  -- differently
--- add a param to 'init' - 'nodata' error, which will b shown instead of list
 -- add pause on start and resume on exit to opts
     -- close_on_load_file = true,
     -- pause_on_start = true,
     -- resume_on_stop = "only-if-did-pause",
 -- look through every function on the subject of possible nil values (i/o), error
-  -- handling and where it is even needed
+  -- handling and where it is even needed; use ASSERT (http://www.lua.org/pil/8.3.html)
+  -- and maybe pcall (which is a next chapter) and traceback (next chapter)
 -- look through every function on the subject of moving some var to global opts
+-- [refresh function] - in case we catch data update in main script
+--   while searcher is initiated and prob. visible - call this function passed
+--   from the outside script to refresh the inner state of the 'searcher'
+
+-- TODO: (http://www.lua.org/pil/7.4.html)
+-- Whenever it is possible, you should try to write stateless iterators, those
+-- that keep all their state in the for variables. With them, you do not create
+-- new objects when you start a loop. If you cannot fit your iteration into that
+-- model, then you should try closures. Besides being more elegant, typically a
+-- closure is more efficient than an iterator using tables: First, it is cheaper
+-- to create a closure than a table; second, access to upvalues is faster than
+-- access to table fields. Later we will see yet another way to write iterators,
+-- with coroutines. This is the most powerful solution, but a little more
+-- expensive.
 
 local mp = require 'mp'
 -- local msg = require 'mp.msg'
 local utils = require 'mp.utils'
 local assdraw = require 'mp.assdraw'
--- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format)
-local ass_events = mp.create_osd_overlay("ass-events")
 
+-- create namespace with default values
 local searcher = {
   is_active = false,
   lines_to_show = 17, -- NOT including search line
+  -- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format)
+  ass = mp.create_osd_overlay("ass-events"),
 
   list = {
     full = {}, filtered = {}, current_i = 1, pointer_i = 1, show_from_to = {}
@@ -36,32 +48,57 @@ local searcher = {
   key_bindings = {},
   insert_mode = false,
   handlers = {},
+
+  styles = {
+    font_size = 21,
+    line_alignment = 7,
+    line_bottom_margin = 1,
+    text_color = {
+      default = 'ffffff',
+      search = 'ff7c68',
+      current = 'aaaaaa',
+    }
+  },
+
+  -- used only in 'update' func to get error text msgs
+  error_codes = {
+    no_match = 'Match required',
+    no_submit_provided = 'No submit function provided'
+  }
 }
 
--- REVIEW: how to make this function a variable in the above object?
-function searcher.list:current()
-  return searcher.line == '' and searcher.list.full or searcher.list.filtered
+-- declare constructor function
+function searcher:new(o)
+  o = o or {}
+  setmetatable(o, self)
+  self.__index = self
+  return o
 end
 
-function searcher.list:filter()
+-- REVIEW: how to make this function a variable in the above object?
+function searcher:current()
+  return self.line == '' and self.list.full or self.list.filtered
+end
+
+function searcher:filter()
   local result = {}
-  for _,v in ipairs(searcher.list.full) do
-    if string.find(string.lower(v.title), string.lower(searcher.line)) then
-      table.insert(result, v)
+  for _,v in ipairs(self.list.full) do
+    if v.content:lower():find(self.line:lower()) then
+      result:insert(v)
     end
   end
-  searcher.list.pointer_i = 1
-  searcher.list.filtered = result
+  self.list.pointer_i = 1
+  self.list.filtered = result
 end
 
-function searcher.list:set_from_to(reset_flag)
+function searcher:set_from_to(reset_flag)
   -- additional variables just for shorter var name
   local i = searcher.list.pointer_i
   local total = searcher.lines_to_show
 
   -- If current list length is lower than 'lines_to_show' prop - show all
-  if total > #searcher.list:current() then
-    searcher.list.show_from_to = {1, #searcher.list:current()}
+  if total > #searcher:current() then
+    searcher.list.show_from_to = {1, #searcher:current()}
     return
   end
 
@@ -70,6 +107,9 @@ function searcher.list:set_from_to(reset_flag)
     return
   end
 
+  -- If menu is opened with something already selected we want this 'selected'
+  -- to be displayed close to the middle of the menu. That's why i don't set
+  -- initially 'show_from_to'.
   -- if show_from_to length is 0 - it is first call of this func in cur. init
   if #searcher.list.show_from_to == 0 then
     local lines_above = math.ceil(total / 2)
@@ -89,7 +129,7 @@ function searcher.list:set_from_to(reset_flag)
     if first ~= 1 and i - first < 2 then
       searcher.list.show_from_to = {first - 1, last - 1}
     end
-    if last ~= #searcher.list:current() and last - i < 2 then
+    if last ~= #searcher:current() and last - i < 2 then
       searcher.list.show_from_to = {first + 1, last + 1}
     end
 
@@ -104,13 +144,209 @@ end
 function searcher:change_selected_index(num)
   self.list.pointer_i = self.list.pointer_i + num
   if self.list.pointer_i < 1 then
-    self.list.pointer_i = #self.list:current()
-  elseif self.list.pointer_i > #self.list:current() then
+    self.list.pointer_i = #self:current()
+  elseif self.list.pointer_i > #self:current() then
     self.list.pointer_i = 1
   end
-  self.list:set_from_to()
+  self:set_from_to()
   self:update()
 end
+
+-- this module requires submit function to be defined in main script
+function searcher:submit() self:update('no_submit_provided') end
+
+-- Render the REPL and console as an ASS OSD
+function searcher:update(err_code)
+  -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
+
+  -- do not bother if function was called to close the menu..
+  if not self.is_active then
+    searcher.ass:remove()
+    return
+  end
+
+  local line_height = self.styles.font_size + self.styles.line_bottom_margin
+
+  local ww, wh = mp.get_osd_size() -- window width & height
+  local menu_x_padding = 5
+  local menu_y_padding = 2
+  -- '+ 1' below is a search string
+  local menu_y_pos =
+    wh - (line_height * (self.lines_to_show + 1) + menu_y_padding * 2)
+
+  -- filter list if 'line' was changed
+  if self.line ~= self.prev_line then
+    self:filter()
+    self.prev_line = self.line
+    self:set_from_to(true)
+  end
+
+  local function reset_styles()
+    local a = assdraw.ass_new()
+    a:append('{\\an7\\bord0\\shad0}') -- alignment top left, border 0, shadow 0
+    a:append('{\\fs' .. self.styles.font_size .. '}')
+    return a.text
+  end
+
+  -- function to get rid of some copypaste
+  local function ass_new_wrapper()
+    local a = assdraw.ass_new()
+    a:new_event()
+    a:append(reset_styles())
+    return a
+  end
+
+  local function get_font_color(style)
+    return '{\\1c&H' .. self.styles.text_color[style] .. '}'
+  end
+
+  local function get_background()
+    local a = ass_new_wrapper()
+    a:append('{\\1c&H1c1c1c\\1a&H19}') -- background color & opacity
+    a:pos(0, 0)
+    a:draw_start()
+    a:rect_cw(0, menu_y_pos, ww, wh)
+    a:draw_stop()
+    return a.text
+  end
+
+  local function get_search_header()
+    local a = ass_new_wrapper()
+
+    a:pos(menu_x_padding, menu_y_pos + menu_y_padding)
+
+    local search_prefix = get_font_color('search') ..
+      (#self:current() ~= 0 and self.list.pointer_i or '!') ..
+      '/' .. #self:current() .. '  Select chapter: '
+
+    -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
+    -- inline with the surrounding text, but it sets the advance to the width
+    -- of the drawing. So the cursor doesn't affect layout too much, make it as
+    -- thin as possible and make it appear to be 1px wide by giving it 0.5px
+    -- horizontal borders.
+    local cheight = self.styles.font_size * 8
+    -- TODO: maybe do it using draw_rect from ass?
+    local cglyph = '{\\r' .. -- styles reset
+      '\\1c&Hffffff&\\3c&Hffffff' .. -- font color and border color
+      '\\xbord0.3\\p4\\pbo24}' .. -- xborder, scale x8 and baseline offset
+      'm 0 0 l 0 ' .. cheight .. -- drawing just a line
+      '{\\p0\\r}' -- finish drawing and reset styles
+    local before_cur = self:ass_escape(self.line:sub(1, self.cursor - 1))
+    local after_cur = self:ass_escape(self.line:sub(self.cursor))
+
+    a:append(table.concat({
+                 search_prefix, get_font_color('default'), before_cur,
+                 cglyph, reset_styles(), get_font_color('default'),
+                 after_cur,
+                 -- TODO: try to replace space below with \h?
+                 (err_code and " " .. self.error_codes[err_code] or "")
+    }))
+
+    return a.text
+
+    -- NOTE: perhaps this commented code will some day help me in coding cursor
+    -- like in M-x emacs menu:
+    -- Redraw the cursor with the REPL text invisible. This will make the
+    -- cursor appear in front of the text.
+    -- ass:new_event()
+    -- ass:an(1)
+    -- ass:append(style .. '{\\alpha&HFF&}> ' .. before_cur)
+    -- ass:append(cglyph)
+    -- ass:append(style .. '{\\alpha&HFF&}' .. after_cur)
+  end
+
+  local function get_list()
+    local a = assdraw.ass_new()
+
+    local function apply_highlighting(y)
+      a:new_event()
+      a:append(reset_styles())
+      a:append('{\\1c&Hffffff\\1a&HE6}') -- background color & opacity
+      a:pos(0, 0)
+      a:draw_start()
+      a:rect_cw(0, y, ww, y + self.styles.font_size)
+      a:draw_stop()
+    end
+
+    -- REVIEW: maybe make another function 'get_line_str' and move there
+    -- everything from this for loop?
+    -- REVIEW: how to use something like table.unpack below?
+    for i=self.list.show_from_to[1], self.list.show_from_to[2] do
+      local value = self:current()[i]
+      local y_offset = menu_y_pos + menu_x_padding +
+        (line_height * (i - self.list.show_from_to[1] + 1))
+      local style = (self.list.current_i == value.index) and 'current' or 'default'
+
+      if i == self.list.pointer_i then apply_highlighting(y_offset) end
+
+      a:new_event()
+      a:append(reset_styles())
+      a:pos(menu_x_padding, y_offset)
+      a:append(get_font_color(style))
+      a:append(value.content)
+    end
+
+    return a.text
+  end
+
+  searcher.ass.res_x = ww
+  searcher.ass.res_y = wh
+  searcher.ass.data = table.concat({
+      get_background(),
+      get_search_header(),
+      get_list()
+  }, "\n")
+
+  searcher.ass:update()
+
+end
+
+-- params:
+--  - data : {list: {}, [current_i] : num}
+function searcher:init(data)
+  self.list.full = data.list or {}
+  self.list.current_i = data.current_i or 1
+  self.list.pointer_i = data.current_i or 1
+  self:set_from_to() -- TODO: move this function call to somewhere else
+  self:set_active(true)
+end
+
+function searcher:exit()
+  self:undefine_key_bindings()
+  self.handlers.exit()
+  collectgarbage()
+end
+
+-- TODO: write some idle func like this
+-- function idle()
+--     if pending_selection then
+--         gallery:set_selection(pending_selection)
+--         pending_selection = nil
+--     end
+--     if ass_changed or geometry_changed then
+--         local ww, wh = mp.get_osd_size()
+--         if geometry_changed then
+--             geometry_changed = false
+--             compute_geometry(ww, wh)
+--         end
+--         if ass_changed then
+--             ass_changed = false
+--             mp.set_osd_ass(ww, wh, ass)
+--         end
+--     end
+-- end
+-- ...
+-- and handle it as follows
+-- init():
+    -- mp.register_idle(idle)
+    -- idle()
+-- exit():
+    -- mp.unregister_idle(idle)
+    -- idle()
+-- And in these observers he is setting a flag, that's being checked in func above
+-- mp.observe_property("osd-width", "native", mark_geometry_stale)
+-- mp.observe_property("osd-height", "native", mark_geometry_stale)
+
 
 --[[
   The below code is a modified implementation of text input from mpv's console.lua:
@@ -168,173 +404,18 @@ function searcher:ass_escape(str)
   return str
 end
 
--- Render the REPL and console as an ASS OSD
-function searcher:update(no_match_error)
-  -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
-
-  -- do not bother if function was called to close the menu..
-  if not self.is_active then
-    ass_events:remove()
-    return
-  end
-
-  -- TODO: move it to 'searcher' obj
-  local styles = {
-    font_size = 21,
-    line_alignment = 7,
-    line_bottom_margin = 1,
-    text_color = {
-      default = 'ffffff',
-      search = 'ff7c68',
-      current = 'aaaaaa',
-    }
-  }
-  local line_height = styles.font_size + styles.line_bottom_margin
-
-  local ww, wh = mp.get_osd_size() -- window width & height
-  local menu_x_padding = 5
-  local menu_y_padding = 2
-  -- + 1 below is a search string
-  local menu_y_pos = wh - (line_height * (self.lines_to_show + 1) + menu_y_padding * 2)
-
-  -- filter list if 'line' was changed
-  if self.line ~= self.prev_line then
-    self.list:filter()
-    self.prev_line = self.line
-    searcher.list:set_from_to(true)
-  end
-
-  -- TODO: any way to make it just 'styles.default' prop? (__get??)
-  -- or redefine assdraw:new_event() to call a.append these default styles..
-  function styles:default()
-    local a = assdraw.ass_new()
-    -- alignment top left, border 0, shadow 0
-    a:append('{\\an7\\bord0\\shad0}')
-    a:append('{\\fs' .. styles.font_size .. '}')
-    return a.text
-  end
-
-  local function get_font_color(style)
-    return '{\\1c&H' .. styles.text_color[style] .. '}'
-  end
-
-  local function get_background_str()
-    local a = assdraw.ass_new()
-    a:new_event()
-    a:append(styles:default())
-    a:append('{\\1c&H1c1c1c\\1a&H19}') -- background color & opacity
-    a:pos(0, 0)
-    a:draw_start()
-    a:rect_cw(0, menu_y_pos, ww, wh)
-    a:draw_stop()
-    return a.text
-  end
-
-  local function get_search_str()
-    local a = assdraw.ass_new()
-
-    a:new_event()
-    a:append(styles:default())
-    a:pos(menu_x_padding, menu_y_pos + menu_y_padding)
-
-    local search_prefix = get_font_color('search') ..
-      (#self.list:current() ~= 0 and self.list.pointer_i or '!') ..
-      '/' .. #self.list:current() .. '  Select chapter: '
-
-    -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
-    -- inline with the surrounding text, but it sets the advance to the width
-    -- of the drawing. So the cursor doesn't affect layout too much, make it as
-    -- thin as possible and make it appear to be 1px wide by giving it 0.5px
-    -- horizontal borders.
-    local cheight = styles.font_size * 8
-    -- TODO: maybe do it using draw_rect from ass?
-    local cglyph = '{\\r' .. -- styles reset
-      '\\1c&Hffffff&\\3c&Hffffff' .. -- font color and border color
-      '\\xbord0.3\\p4\\pbo24}' .. -- xborder, scale x8 and baseline offset
-      'm 0 0 l 0 ' .. cheight .. -- drawing just a line
-      '{\\p0\\r}' -- finish drawing and reset styles
-    local before_cur = self:ass_escape(self.line:sub(1, self.cursor - 1))
-    local after_cur = self:ass_escape(self.line:sub(self.cursor))
-
-    a:append(table.concat({
-                 search_prefix, get_font_color('default'), before_cur,
-                 cglyph, styles:default(), get_font_color('default'),
-                 after_cur, (no_match_error and " [Match required]" or "")
-    }))
-
-    return a.text
-
-    -- NOTE: perhaps this commented code will some day help me in coding cursor
-    -- like in M-x emacs menu:
-    -- Redraw the cursor with the REPL text invisible. This will make the
-    -- cursor appear in front of the text.
-    -- ass:new_event()
-    -- ass:an(1)
-    -- ass:append(style .. '{\\alpha&HFF&}> ' .. before_cur)
-    -- ass:append(cglyph)
-    -- ass:append(style .. '{\\alpha&HFF&}' .. after_cur)
-  end
-
-  local function get_list_str()
-    local a = assdraw.ass_new()
-
-    local function apply_highlighting(y)
-      a:new_event()
-      a:append(styles:default())
-      a:append('{\\1c&Hffffff\\1a&HE6}') -- background color & opacity
-      a:pos(0, 0)
-      a:draw_start()
-      a:rect_cw(0, y, ww, y + styles.font_size)
-      a:draw_stop()
-    end
-
-    -- REVIEW: how to use something like table.unpack below?
-    for i=self.list.show_from_to[1], self.list.show_from_to[2] do
-      -- 'i' above in 'for' is index of menu line, this one is index of an item
-      -- in current list
-      local value = self.list:current()[i]
-      local y_offset = menu_y_pos + menu_x_padding +
-        (line_height * (i - self.list.show_from_to[1] + 1))
-      local style = (self.list.current_i == value.index) and 'current' or 'default'
-
-      if i == self.list.pointer_i then apply_highlighting(y_offset) end
-
-      a:new_event()
-      a:append(styles:default())
-      a:pos(menu_x_padding, y_offset)
-      a:append(get_font_color(style))
-      a:append(value.title)
-    end
-
-    return a.text
-  end
-
-  ass_events.res_x = ww
-  ass_events.res_y = wh
-  ass_events.data = table.concat({
-      get_background_str(),
-      get_search_str(),
-      get_list_str()
-  }, "\n")
-
-  ass_events:update()
-
-end
-
 -- Set the REPL visibility ("enable", Esc)
 function searcher:set_active(active)
   if active == self.is_active then return end
   if active then
     self.is_active = true
     self.insert_mode = false
-    -- mp.enable_key_bindings('console-input', 'allow-hide-cursor+allow-vo-dragging')
     mp.enable_messages('terminal-default')
     self:define_key_bindings()
   else
     self.is_active = false
     self:undefine_key_bindings()
     self:clear()
-    -- mp.enable_messages('silent:terminal-default')
     collectgarbage()
   end
   self:update()
@@ -456,13 +537,8 @@ end
 
 -- Run the current command and clear the line (Enter)
 function searcher:handle_enter()
-  if #self.list.full == 0 then
-    self:update(true)
-    return
-  end
-
-  if self.line ~= "" and not next(self.list:current()) then
-    self:update(true)
+  if #self:current() == 0 then
+    self:update('no_match')
     return
   end
 
@@ -478,7 +554,7 @@ function searcher:handle_enter()
     self:help_command(help)
   else
     -- mp.command(self.line)
-    self:submit(self.list:current()[self.list.pointer_i])
+    self:submit(self:current()[self.list.pointer_i])
   end
 
   self:set_active(false)
@@ -766,69 +842,5 @@ end
 -------------------------------------------------------------------------------
 --                           END ORIGINAL MPV CODE                           --
 -------------------------------------------------------------------------------
-
--- params:
---  - data : {list: {}, [current_] : num}
---  - submit callback
---  - [filter callback] - data might have different fields
---  - TODO: [refresh function] - in case we catch data update in main script
---    while searcher is initiated and prob. visible - call this function passed
---    from the outside script to refresh the inner state of the 'searcher'
-function searcher:init(data, submit_fn)
-  if data and #data.list then
-    self.list.full = data.list
-    self.list.current_i = data.current_i or 1
-    self.list.pointer_i = data.current_i or 1
-    self.list:set_from_to()
-  else
-    -- FIXME: doesn't work
-    self.list.full = {}
-    self.list:set_from_to()
-  end
-
-  -- self.submit = function(self, val) submit_fn() end
-  -- TODO: make a fallback for 'mp.command(line)' in case submit_fn() = nil
-  function self:submit(val) submit_fn(val) end
-
-  -- TODO: decide with filter_fn
-
-  self:set_active(true)
-end
-
-function searcher:exit()
-  self:undefine_key_bindings()
-  self.handlers.exit()
-  collectgarbage()
-end
-
--- TODO: write some idle func like this
--- function idle()
---     if pending_selection then
---         gallery:set_selection(pending_selection)
---         pending_selection = nil
---     end
---     if ass_changed or geometry_changed then
---         local ww, wh = mp.get_osd_size()
---         if geometry_changed then
---             geometry_changed = false
---             compute_geometry(ww, wh)
---         end
---         if ass_changed then
---             ass_changed = false
---             mp.set_osd_ass(ww, wh, ass)
---         end
---     end
--- end
--- ...
--- and handle it as follows
--- init():
-    -- mp.register_idle(idle)
-    -- idle()
--- exit():
-    -- mp.unregister_idle(idle)
-    -- idle()
--- And in these observers he is setting a flag, that's being checked in func above
--- mp.observe_property("osd-width", "native", mark_geometry_stale)
--- mp.observe_property("osd-height", "native", mark_geometry_stale)
 
 return searcher
