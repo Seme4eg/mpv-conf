@@ -28,26 +28,10 @@ local utils = require 'mp.utils'
 local assdraw = require 'mp.assdraw'
 
 -- create namespace with default values
-local searcher = {
-  is_active = false,
+local em = {
+  -- customisable values ------------------------------------------------------
   lines_to_show = 17, -- NOT including search line
-  -- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format)
-  ass = mp.create_osd_overlay("ass-events"),
-
-  list = {
-    full = {}, filtered = {}, current_i = 1, pointer_i = 1, show_from_to = {}
-  },
-
-  line = '',
-  -- if there was no cursor it wouldn't have been needed, but for now we need
-  -- variable below only to compare it with 'line' and see if we need to filter
-  prev_line = '',
-  cursor = 1,
-  history = {},
-  history_pos = 1,
-  key_bindings = {},
-  insert_mode = false,
-  handlers = {},
+  search_heading = 'Default search heading',
 
   styles = {
     font_size = 21,
@@ -60,6 +44,25 @@ local searcher = {
     }
   },
 
+
+  -- 'private' values that are not supposed to be changed from the outside ----
+  is_active = false,
+  list = {
+    full = {}, filtered = {}, current_i = 1, pointer_i = 1, show_from_to = {}
+  },
+  -- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format)
+  ass = mp.create_osd_overlay("ass-events"),
+
+  line = '',
+  -- if there was no cursor it wouldn't have been needed, but for now we need
+  -- variable below only to compare it with 'line' and see if we need to filter
+  prev_line = '',
+  cursor = 1,
+  history = {},
+  history_pos = 1,
+  key_bindings = {},
+  insert_mode = false,
+
   -- used only in 'update' func to get error text msgs
   error_codes = {
     no_match = 'Match required',
@@ -68,80 +71,89 @@ local searcher = {
 }
 
 -- declare constructor function
-function searcher:new(o)
+function em:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
   return o
 end
 
--- REVIEW: how to make this function a variable in the above object?
-function searcher:current()
+-- this func is just a getter of a current list depending on search line
+function em:current()
   return self.line == '' and self.list.full or self.list.filtered
 end
 
-function searcher:filter()
+-- REVIEW: how to get rid of this wrapper and handle filter func sideeffects
+-- in a more elegant way?
+function em:filter_wrapper()
+  -- handles sideeffect that are needed to be run on filtering list
+  -- cuz the filter func may be redefined in main script and therefore needs
+  -- to be straight forward - only doing filtering and returning the table
+
+  -- passing current query just in case, so ppl can use it in their custom funcs
+  self.list.filtered = self:filter(self.line)
+
+  self.prev_line = self.line
+  self.list.pointer_i = 1
+  self:set_from_to(true)
+end
+
+function em:filter()
+  -- default filter func, might be redefined in main script
   local result = {}
   for _,v in ipairs(self.list.full) do
     if v.content:lower():find(self.line:lower()) then
-      result:insert(v)
+      table.insert(result, v)
     end
   end
-  self.list.pointer_i = 1
-  self.list.filtered = result
+  return result
 end
 
-function searcher:set_from_to(reset_flag)
+function em:set_from_to(reset_flag)
   -- additional variables just for shorter var name
-  local i = searcher.list.pointer_i
-  local total = searcher.lines_to_show
-
-  -- If current list length is lower than 'lines_to_show' prop - show all
-  if total > #searcher:current() then
-    searcher.list.show_from_to = {1, #searcher:current()}
-    return
-  end
+  local i = self.list.pointer_i
+  local total = math.min(self.lines_to_show, #self:current())
 
   if reset_flag then
-    searcher.list.show_from_to = {1, total}
+    self.list.show_from_to = {1, total}
     return
   end
 
   -- If menu is opened with something already selected we want this 'selected'
-  -- to be displayed close to the middle of the menu. That's why i don't set
-  -- initially 'show_from_to'.
-  -- if show_from_to length is 0 - it is first call of this func in cur. init
-  if #searcher.list.show_from_to == 0 then
+  -- to be displayed close to the middle of the menu. That's why 'show_from_to'
+  -- is not initially set, so we can know - if show_from_to length is 0 - it is
+  -- first call of this func in cur. init
+  if #self.list.show_from_to == 0 then
     local lines_above = math.ceil(total / 2)
     if i < lines_above then
-      searcher.list.show_from_to = {1, total}
+      self.list.show_from_to = {1, total}
     else
       -- set show_from_to so chosen item will be displayed close to middle
-      searcher.list.show_from_to = {
+      self.list.show_from_to = {
         i - lines_above + 1,
         i - lines_above + total
       }
     end
   else
-    local first, last = table.unpack(searcher.list.show_from_to)
+    local first, last = table.unpack(self.list.show_from_to)
 
     -- handle cursor moving towards start / end bondary
     if first ~= 1 and i - first < 2 then
-      searcher.list.show_from_to = {first - 1, last - 1}
+      self.list.show_from_to = {first - 1, last - 1}
     end
-    if last ~= #searcher:current() and last - i < 2 then
-      searcher.list.show_from_to = {first + 1, last + 1}
+    if last ~= #self:current() and last - i < 2 then
+      self.list.show_from_to = {first + 1, last + 1}
     end
 
-    -- handle index jumps from beg to end and backwards
+    -- handle index jumps from beginning to end and backwards
     if i > last then
-      searcher.list.show_from_to = {i - total + 1, i}
+      self.list.show_from_to = {i - total + 1, i}
     end
-    if i < first then searcher.list.show_from_to = {1, total} end
+    if i < first then self.list.show_from_to = {1, total} end
   end
 end
 
-function searcher:change_selected_index(num)
+function em:change_selected_index(num)
   self.list.pointer_i = self.list.pointer_i + num
   if self.list.pointer_i < 1 then
     self.list.pointer_i = #self:current()
@@ -153,34 +165,33 @@ function searcher:change_selected_index(num)
 end
 
 -- this module requires submit function to be defined in main script
-function searcher:submit() self:update('no_submit_provided') end
+function em:submit() self:update('no_submit_provided') end
 
 -- Render the REPL and console as an ASS OSD
-function searcher:update(err_code)
+function em:update(err_code)
   -- ASS tags documentation here - https://aegi.vmoe.info/docs/3.0/ASS_Tags/
 
   -- do not bother if function was called to close the menu..
   if not self.is_active then
-    searcher.ass:remove()
+    em.ass:remove()
     return
   end
 
   local line_height = self.styles.font_size + self.styles.line_bottom_margin
-
   local ww, wh = mp.get_osd_size() -- window width & height
-  local menu_x_padding = 5
-  local menu_y_padding = 2
+  local menu_x_padding = 5 -- this padding for now applies only to 'left', not x
+  local menu_y_padding = 2 -- but this one applies to both - top & bottom
   -- '+ 1' below is a search string
   local menu_y_pos =
     wh - (line_height * (self.lines_to_show + 1) + menu_y_padding * 2)
 
   -- filter list if 'line' was changed
   if self.line ~= self.prev_line then
-    self:filter()
-    self.prev_line = self.line
-    self:set_from_to(true)
+    self:filter_wrapper()
   end
 
+  -- REVIEW: for now i don't see normal way of mergin this func with below one
+  -- but it's being used only once
   local function reset_styles()
     local a = assdraw.ass_new()
     a:append('{\\an7\\bord0\\shad0}') -- alignment top left, border 0, shadow 0
@@ -215,9 +226,14 @@ function searcher:update(err_code)
 
     a:pos(menu_x_padding, menu_y_pos + menu_y_padding)
 
-    local search_prefix = get_font_color('search') ..
-      (#self:current() ~= 0 and self.list.pointer_i or '!') ..
-      '/' .. #self:current() .. '  Select chapter: '
+    local search_prefix = table.concat({
+        get_font_color('search'),
+        (#self:current() ~= 0 and self.list.pointer_i or '!'),
+        '/', #self:current(), '\\h\\h', self.search_heading, ':\\h'
+    }) ;
+
+    a:append(search_prefix)
+    a:append(get_font_color'default') -- reset font color after search prefix
 
     -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
     -- inline with the surrounding text, but it sets the advance to the width
@@ -235,11 +251,9 @@ function searcher:update(err_code)
     local after_cur = self:ass_escape(self.line:sub(self.cursor))
 
     a:append(table.concat({
-                 search_prefix, get_font_color('default'), before_cur,
-                 cglyph, reset_styles(), get_font_color('default'),
-                 after_cur,
-                 -- TODO: try to replace space below with \h?
-                 (err_code and " " .. self.error_codes[err_code] or "")
+                 before_cur, cglyph, reset_styles(),
+                 get_font_color('default'), after_cur,
+                 (err_code and '\\h' .. self.error_codes[err_code] or "")
     }))
 
     return a.text
@@ -268,6 +282,8 @@ function searcher:update(err_code)
       a:draw_stop()
     end
 
+    mp.msg.info(self.list.show_from_to[1], self.list.show_from_to[2], #self:current())
+
     -- REVIEW: maybe make another function 'get_line_str' and move there
     -- everything from this for loop?
     -- REVIEW: how to use something like table.unpack below?
@@ -289,31 +305,29 @@ function searcher:update(err_code)
     return a.text
   end
 
-  searcher.ass.res_x = ww
-  searcher.ass.res_y = wh
-  searcher.ass.data = table.concat({
+  em.ass.res_x = ww
+  em.ass.res_y = wh
+  em.ass.data = table.concat({
       get_background(),
       get_search_header(),
       get_list()
   }, "\n")
 
-  searcher.ass:update()
+  em.ass:update()
 
 end
 
 -- params:
 --  - data : {list: {}, [current_i] : num}
-function searcher:init(data)
+function em:init(data)
   self.list.full = data.list or {}
   self.list.current_i = data.current_i or 1
   self.list.pointer_i = data.current_i or 1
-  self:set_from_to() -- TODO: move this function call to somewhere else
   self:set_active(true)
 end
 
-function searcher:exit()
+function em:exit()
   self:undefine_key_bindings()
-  self.handlers.exit()
   collectgarbage()
 end
 
@@ -374,7 +388,7 @@ end
 -- OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 -- CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-function searcher:detect_platform()
+function em:detect_platform()
   local o = {}
   -- Kind of a dumb way of detecting the platform but whatever
   if mp.get_property_native('options/vo-mmcss-profile', o) ~= o then
@@ -388,7 +402,7 @@ function searcher:detect_platform()
 end
 
 -- Escape a string for verbatim display on the OSD
-function searcher:ass_escape(str)
+function em:ass_escape(str)
   -- There is no escape for '\' in ASS (I think?) but '\' is used verbatim if
   -- it isn't followed by a recognised character, so add a zero-width
   -- non-breaking space
@@ -405,25 +419,27 @@ function searcher:ass_escape(str)
 end
 
 -- Set the REPL visibility ("enable", Esc)
-function searcher:set_active(active)
+function em:set_active(active)
   if active == self.is_active then return end
   if active then
     self.is_active = true
     self.insert_mode = false
     mp.enable_messages('terminal-default')
     self:define_key_bindings()
+    self:set_from_to()
+    self:update()
   else
+    -- no need to call 'update' here cuz 'clear' method is calling it
     self.is_active = false
     self:undefine_key_bindings()
     self:clear()
     collectgarbage()
   end
-  self:update()
 end
 
 -- Naive helper function to find the next UTF-8 character in 'str' after 'pos'
 -- by skipping continuation bytes. Assumes 'str' contains valid UTF-8.
-function searcher:next_utf8(str, pos)
+function em:next_utf8(str, pos)
   if pos > str:len() then return pos end
   repeat
     pos = pos + 1
@@ -432,7 +448,7 @@ function searcher:next_utf8(str, pos)
 end
 
 -- As above, but finds the previous UTF-8 charcter in 'str' before 'pos'
-function searcher:prev_utf8(str, pos)
+function em:prev_utf8(str, pos)
   if pos <= 1 then return pos end
   repeat
     pos = pos - 1
@@ -441,7 +457,7 @@ function searcher:prev_utf8(str, pos)
 end
 
 -- Insert a character at the current cursor position (any_unicode)
-function searcher:handle_char_input(c)
+function em:handle_char_input(c)
   if self.insert_mode then
     self.line = self.line:sub(1, self.cursor - 1) .. c .. self.line:sub(self:next_utf8(self.line, self.cursor))
   else
@@ -452,7 +468,7 @@ function searcher:handle_char_input(c)
 end
 
 -- Remove the character behind the cursor (Backspace)
-function searcher:handle_backspace()
+function em:handle_backspace()
   if self.cursor <= 1 then return end
   local prev = self:prev_utf8(self.line, self.cursor)
   self.line = self.line:sub(1, prev - 1) .. self.line:sub(self.cursor)
@@ -461,31 +477,31 @@ function searcher:handle_backspace()
 end
 
 -- Remove the character in front of the cursor (Del)
-function searcher:handle_del()
+function em:handle_del()
   if self.cursor > self.line:len() then return end
   self.line = self.line:sub(1, self.cursor - 1) .. self.line:sub(self:next_utf8(self.line, self.cursor))
   self:update()
 end
 
 -- Toggle insert mode (Ins)
-function searcher:handle_ins()
+function em:handle_ins()
   self.insert_mode = not self.insert_mode
 end
 
 -- Move the cursor to the next character (Right)
-function searcher:next_char()
+function em:next_char()
   self.cursor = self:next_utf8(self.line, self.cursor)
   self:update()
 end
 
 -- Move the cursor to the previous character (Left)
-function searcher:prev_char()
+function em:prev_char()
   self.cursor = self:prev_utf8(self.line, self.cursor)
   self:update()
 end
 
 -- Clear the current line (Ctrl+C)
-function searcher:clear()
+function em:clear()
   self.line = ''
   self.prev_line = ''
   self.list.current_i = 1
@@ -499,7 +515,7 @@ function searcher:clear()
 end
 
 -- TODO: bind this to C-h maybe
-function searcher:help_command(param)
+function em:help_command(param)
   local cmdlist = mp.get_property_native('command-list')
   local output = ''
   if param == '' then
@@ -536,7 +552,7 @@ function searcher:help_command(param)
 end
 
 -- Run the current command and clear the line (Enter)
-function searcher:handle_enter()
+function em:handle_enter()
   if #self:current() == 0 then
     self:update('no_match')
     return
@@ -561,7 +577,7 @@ function searcher:handle_enter()
 end
 
 -- Go to the specified position in the command history
-function searcher:go_history(new_pos)
+function em:go_history(new_pos)
   local old_pos = self.history_pos
   self.history_pos = new_pos
 
@@ -596,23 +612,23 @@ function searcher:go_history(new_pos)
 end
 
 -- Go to the specified relative position in the command history (Up, Down)
-function searcher:move_history(amount)
+function em:move_history(amount)
   self:go_history(self.history_pos + amount)
 end
 
 -- Go to the first command in the command history (PgUp)
-function searcher:handle_pgup()
+function em:handle_pgup()
   self:go_history(1)
 end
 
 -- Stop browsing history and start editing a blank line (PgDown)
-function searcher:handle_pgdown()
+function em:handle_pgdown()
   self:go_history(#self.history + 1)
 end
 
 -- Move to the start of the current word, or if already at the start, the start
 -- of the previous word. (Ctrl+Left)
-function searcher:prev_word()
+function em:prev_word()
   -- This is basically the same as next_word() but backwards, so reverse the
   -- string in order to do a "backwards" find. This wouldn't be as annoying
   -- to do if Lua didn't insist on 1-based indexing.
@@ -622,25 +638,25 @@ end
 
 -- Move to the end of the current word, or if already at the end, the end of
 -- the next word. (Ctrl+Right)
-function searcher:next_word()
+function em:next_word()
   self.cursor = select(2, self.line:find('%s*[^%s]*', self.cursor)) + 1
   self:update()
 end
 
 -- Move the cursor to the beginning of the line (HOME)
-function searcher:go_home()
+function em:go_home()
   self.cursor = 1
   self:update()
 end
 
 -- Move the cursor to the end of the line (END)
-function searcher:go_end()
+function em:go_end()
   self.cursor = self.line:len() + 1
   self:update()
 end
 
 -- Delete from the cursor to the beginning of the word (Ctrl+Backspace)
-function searcher:del_word()
+function em:del_word()
   local before_cur = self.line:sub(1, self.cursor - 1)
   local after_cur = self.line:sub(self.cursor)
 
@@ -651,7 +667,7 @@ function searcher:del_word()
 end
 
 -- Delete from the cursor to the end of the word (Ctrl+Del)
-function searcher:del_next_word()
+function em:del_next_word()
   if self.cursor > self.line:len() then return end
 
   local before_cur = self.line:sub(1, self.cursor - 1)
@@ -663,20 +679,20 @@ function searcher:del_next_word()
 end
 
 -- Delete from the cursor to the end of the line (Ctrl+K)
-function searcher:del_to_eol()
+function em:del_to_eol()
   self.line = self.line:sub(1, self.cursor - 1)
   self:update()
 end
 
 -- Delete from the cursor back to the start of the line (Ctrl+U)
-function searcher:del_to_start()
+function em:del_to_start()
   self.line = self.line:sub(self.cursor)
   self.cursor = 1
   self:update()
 end
 
 -- Returns a string of UTF-8 text from the clipboard (or the primary selection)
-function searcher:get_clipboard(clip)
+function em:get_clipboard(clip)
   -- Pick a better default font for Windows and macOS
   local platform = self:detect_platform()
 
@@ -735,7 +751,7 @@ end
 
 -- Paste text from the window-system's clipboard. 'clip' determines whether the
 -- clipboard or the primary selection buffer is used (on X11 and Wayland only.)
-function searcher:paste(clip)
+function em:paste(clip)
   local text = self:get_clipboard(clip)
   local before_cur = self.line:sub(1, self.cursor - 1)
   local after_cur = self.line:sub(self.cursor)
@@ -746,7 +762,7 @@ end
 
 -- List of input bindings. This is a weird mashup between common GUI text-input
 -- bindings and readline bindings.
-function searcher:get_bindings()
+function em:get_bindings()
   local bindings = {
     { 'ctrl+[',      function() self:set_active(false) end         },
     { 'ctrl+g',      function() self:set_active(false) end         },
@@ -808,7 +824,7 @@ function searcher:get_bindings()
   return bindings
 end
 
-function searcher:text_input(info)
+function em:text_input(info)
   if info.key_text and (info.event == "press" or info.event == "down"
                         or info.event == "repeat")
   then
@@ -816,7 +832,7 @@ function searcher:text_input(info)
   end
 end
 
-function searcher:define_key_bindings()
+function em:define_key_bindings()
   if #self.key_bindings > 0 then
     return
   end
@@ -832,7 +848,7 @@ function searcher:define_key_bindings()
   self.key_bindings[#self.key_bindings + 1] = "search_input"
 end
 
-function searcher:undefine_key_bindings()
+function em:undefine_key_bindings()
   for _, name in ipairs(self.key_bindings) do
     mp.remove_key_binding(name)
   end
@@ -843,4 +859,4 @@ end
 --                           END ORIGINAL MPV CODE                           --
 -------------------------------------------------------------------------------
 
-return searcher
+return em

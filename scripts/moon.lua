@@ -1,10 +1,3 @@
--- display chapter on osd and easily switch between chapters by click on title
--- of chapter
-
--- Possible TODO:
---   like in SimpleHistory line 357 function does
---   mp.add_forced_key_binding(opts.toggle_menu_binding, "escape", destroy)
-
 
 local mp = require 'mp' -- isn't actually required, mp still gonna be defined
 -- local msg = require 'mp.msg'
@@ -17,15 +10,18 @@ local opts = {
 (require 'mp.options').read_options(opts, mp.get_script_name())
 
 package.path = mp.command_native({"expand-path", "~~/script-modules/?.lua;"})..package.path
-local searcher = require "moon-searcher"
+local em = require "extended-menu"
 
 -- You can freely redefine moon-searcher methods:
 -- - submit(val) -- assuming you passed correct 'data' format to init() will
 --    return data[i], which shall contain full list
 -- - filter() - data might have different fields so there might be a need to
---    write a custom filter func, last 2 string of it whould be exact same as
---    in default filter func
-local chapter_menu = searcher:new()
+--    write a custom filter func. It accepts optional 'query' param, otherwise
+--    takes current user input. But it MUST return filtered table the same
+--    format as initial list - {{index, content}, {index, content}, ..}
+local chapter_menu = em:new({
+    search_heading = 'Select chapter'
+})
 
 local chapter = {list = {}, current_i = 0}
 
