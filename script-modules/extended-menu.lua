@@ -1,16 +1,3 @@
--- TODO:
--- add pause on start and resume on exit to opts
-    -- close_on_load_file = true,
-    -- pause_on_start = true,
-    -- resume_on_stop = "only-if-did-pause",
--- look through every function on the subject of possible nil values (i/o), error
-  -- handling and where it is even needed; use ASSERT (http://www.lua.org/pil/8.3.html)
-  -- and maybe pcall (which is a next chapter) and traceback (next chapter)
--- look through every function on the subject of moving some var to global opts
--- [refresh function] - in case we catch data update in main script
---   while searcher is initiated and prob. visible - call this function passed
---   from the outside script to refresh the inner state of the 'searcher'
-
 -- TODO: (http://www.lua.org/pil/7.4.html)
 -- Whenever it is possible, you should try to write stateless iterators, those
 -- that keep all their state in the for variables. With them, you do not create
@@ -23,35 +10,47 @@
 -- expensive.
 
 local mp = require 'mp'
--- local msg = require 'mp.msg'
 local utils = require 'mp.utils'
 local assdraw = require 'mp.assdraw'
 
 -- create namespace with default values
 local em = {
-  -- customisable values ------------------------------------------------------
-  lines_to_show = 17, -- NOT including search line
-  search_heading = 'Default search heading',
 
-  styles = {
-    font_size = 21,
-    line_alignment = 7,
-    line_bottom_margin = 1,
-    text_color = {
-      default = 'ffffff',
-      search = 'ff7c68',
-      current = 'aaaaaa',
-    }
+  -- customisable values ------------------------------------------------------
+
+  lines_to_show = 17, -- NOT including search line
+  pause_on_start = true,
+  resume_on_exit = "only-if-was-paused", -- another possible value is true
+
+  -- styles (earlyer it was a table, but required many more steps to pass def-s
+  --            here from .conf file)
+  font_size = 21,
+  line_bottom_margin = 1, -- basically space between lines
+  text_color = {
+    default = 'ffffff',
+    search = 'ff7c68',
+    current = 'aaaaaa',
+  },
+  menu_x_padding = 5, -- this padding for now applies only to 'left', not x
+  menu_y_padding = 2, -- but this one applies to both - top & bottom
+
+
+  -- values that should be passed from main script ----------------------------
+
+  search_heading = 'Default search heading',
+  -- 'full' is required from main script, 'current_i' is optional
+  -- others are 'private'
+  list = {
+    full = {}, filtered = {}, current_i = nil, pointer_i = 1, show_from_to = {}
   },
 
 
   -- 'private' values that are not supposed to be changed from the outside ----
+
   is_active = false,
-  list = {
-    full = {}, filtered = {}, current_i = 1, pointer_i = 1, show_from_to = {}
-  },
   -- https://mpv.io/manual/master/#lua-scripting-mp-create-osd-overlay(format)
   ass = mp.create_osd_overlay("ass-events"),
+  was_paused = false, -- flag that indicates that vid was paused by this script
 
   line = '',
   -- if there was no cursor it wouldn't have been needed, but for now we need
@@ -112,9 +111,10 @@ end
 function em:set_from_to(reset_flag)
   -- additional variables just for shorter var name
   local i = self.list.pointer_i
-  local total = math.min(self.lines_to_show, #self:current())
+  local to_show = self.lines_to_show
+  local total = #self:current()
 
-  if reset_flag then
+  if reset_flag or to_show > total then
     self.list.show_from_to = {1, total}
     return
   end
@@ -124,15 +124,14 @@ function em:set_from_to(reset_flag)
   -- is not initially set, so we can know - if show_from_to length is 0 - it is
   -- first call of this func in cur. init
   if #self.list.show_from_to == 0 then
-    local lines_above = math.ceil(total / 2)
-    if i < lines_above then
-      self.list.show_from_to = {1, total}
+    -- set show_from_to so chosen item will be displayed close to middle
+    local half_list = math.ceil(to_show / 2)
+    if i < half_list then
+      self.list.show_from_to = {1, to_show}
+    elseif total - i < half_list then
+      self.list.show_from_to = {total - to_show + 1, total}
     else
-      -- set show_from_to so chosen item will be displayed close to middle
-      self.list.show_from_to = {
-        i - lines_above + 1,
-        i - lines_above + total
-      }
+      self.list.show_from_to = {i - half_list + 1, i - half_list + to_show}
     end
   else
     local first, last = table.unpack(self.list.show_from_to)
@@ -141,15 +140,15 @@ function em:set_from_to(reset_flag)
     if first ~= 1 and i - first < 2 then
       self.list.show_from_to = {first - 1, last - 1}
     end
-    if last ~= #self:current() and last - i < 2 then
+    if last ~= total and last - i < 2 then
       self.list.show_from_to = {first + 1, last + 1}
     end
 
     -- handle index jumps from beginning to end and backwards
     if i > last then
-      self.list.show_from_to = {i - total + 1, i}
+      self.list.show_from_to = {i - to_show + 1, i}
     end
-    if i < first then self.list.show_from_to = {1, total} end
+    if i < first then self.list.show_from_to = {1, to_show} end
   end
 end
 
@@ -177,25 +176,21 @@ function em:update(err_code)
     return
   end
 
-  local line_height = self.styles.font_size + self.styles.line_bottom_margin
+  local line_height = self.font_size + self.line_bottom_margin
   local ww, wh = mp.get_osd_size() -- window width & height
-  local menu_x_padding = 5 -- this padding for now applies only to 'left', not x
-  local menu_y_padding = 2 -- but this one applies to both - top & bottom
   -- '+ 1' below is a search string
   local menu_y_pos =
-    wh - (line_height * (self.lines_to_show + 1) + menu_y_padding * 2)
+    wh - (line_height * (self.lines_to_show + 1) + self.menu_y_padding * 2)
 
-  -- filter list if 'line' was changed
-  if self.line ~= self.prev_line then
-    self:filter_wrapper()
-  end
+  -- didn't find better place to handle filtered list update
+  if self.line ~= self.prev_line then self:filter_wrapper() end
 
   -- REVIEW: for now i don't see normal way of mergin this func with below one
   -- but it's being used only once
   local function reset_styles()
     local a = assdraw.ass_new()
     a:append('{\\an7\\bord0\\shad0}') -- alignment top left, border 0, shadow 0
-    a:append('{\\fs' .. self.styles.font_size .. '}')
+    a:append('{\\fs' .. self.font_size .. '}')
     return a.text
   end
 
@@ -208,7 +203,7 @@ function em:update(err_code)
   end
 
   local function get_font_color(style)
-    return '{\\1c&H' .. self.styles.text_color[style] .. '}'
+    return '{\\1c&H' .. self.text_color[style] .. '}'
   end
 
   local function get_background()
@@ -224,7 +219,7 @@ function em:update(err_code)
   local function get_search_header()
     local a = ass_new_wrapper()
 
-    a:pos(menu_x_padding, menu_y_pos + menu_y_padding)
+    a:pos(self.menu_x_padding, menu_y_pos + self.menu_y_padding)
 
     local search_prefix = table.concat({
         get_font_color('search'),
@@ -240,7 +235,7 @@ function em:update(err_code)
     -- of the drawing. So the cursor doesn't affect layout too much, make it as
     -- thin as possible and make it appear to be 1px wide by giving it 0.5px
     -- horizontal borders.
-    local cheight = self.styles.font_size * 8
+    local cheight = self.font_size * 8
     -- TODO: maybe do it using draw_rect from ass?
     local cglyph = '{\\r' .. -- styles reset
       '\\1c&Hffffff&\\3c&Hffffff' .. -- font color and border color
@@ -278,18 +273,16 @@ function em:update(err_code)
       a:append('{\\1c&Hffffff\\1a&HE6}') -- background color & opacity
       a:pos(0, 0)
       a:draw_start()
-      a:rect_cw(0, y, ww, y + self.styles.font_size)
+      a:rect_cw(0, y, ww, y + self.font_size)
       a:draw_stop()
     end
-
-    mp.msg.info(self.list.show_from_to[1], self.list.show_from_to[2], #self:current())
 
     -- REVIEW: maybe make another function 'get_line_str' and move there
     -- everything from this for loop?
     -- REVIEW: how to use something like table.unpack below?
     for i=self.list.show_from_to[1], self.list.show_from_to[2] do
-      local value = self:current()[i]
-      local y_offset = menu_y_pos + menu_x_padding +
+      local value = assert(self:current()[i], 'no value with index ' .. i)
+      local y_offset = menu_y_pos + self.menu_x_padding +
         (line_height * (i - self.list.show_from_to[1] + 1))
       local style = (self.list.current_i == value.index) and 'current' or 'default'
 
@@ -297,7 +290,7 @@ function em:update(err_code)
 
       a:new_event()
       a:append(reset_styles())
-      a:pos(menu_x_padding, y_offset)
+      a:pos(self.menu_x_padding, y_offset)
       a:append(get_font_color(style))
       a:append(value.content)
     end
@@ -321,7 +314,7 @@ end
 --  - data : {list: {}, [current_i] : num}
 function em:init(data)
   self.list.full = data.list or {}
-  self.list.current_i = data.current_i or 1
+  self.list.current_i = data.current_i or nil
   self.list.pointer_i = data.current_i or 1
   self:set_active(true)
 end
@@ -426,12 +419,26 @@ function em:set_active(active)
     self.insert_mode = false
     mp.enable_messages('terminal-default')
     self:define_key_bindings()
+
+    -- set flag 'was_paused' only if vid wasn't paused before EM init
+    if self.pause_on_start and not mp.get_property_bool("pause", false) then
+      mp.set_property_bool("pause", true)
+      self.was_paused = true
+    end
+
     self:set_from_to()
+    mp.msg.info(self.list.show_from_to[1], self.list.show_from_to[2])
     self:update()
   else
-    -- no need to call 'update' here cuz 'clear' method is calling it
+    -- no need to call 'update' in this block cuz 'clear' method is calling it
     self.is_active = false
     self:undefine_key_bindings()
+
+    if self.resume_on_exit == true or
+      (self.resume_on_exit == "only-if-was-paused" and self.was_paused) then
+        mp.set_property_bool("pause", false)
+    end
+
     self:clear()
     collectgarbage()
   end
@@ -504,13 +511,18 @@ end
 function em:clear()
   self.line = ''
   self.prev_line = ''
-  self.list.current_i = 1
+
+  self.list.current_i = nil
   self.list.pointer_i = 1
   self.list.filtered = {}
   self.list.show_from_to = {}
+
+  self.was_paused = false
+
   self.cursor = 1
   self.insert_mode = false
   self.history_pos = #self.history + 1
+
   self:update()
 end
 
