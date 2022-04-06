@@ -18,7 +18,7 @@ local opts = {
   search_heading = 'M-x',
   -- fields to use when searching for string match / any other custom searching
   -- if value has 0 length, then search list item itself
-  filter_by_fields = {'cmd'},
+  filter_by_fields = {'cmd', 'key', 'comment'},
 }
 
 (require 'mp.options').read_options(opts, mp.get_script_name())

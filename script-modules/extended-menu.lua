@@ -109,7 +109,7 @@ function em:filter()
 
   local function get_full_search_str(v)
     local str = ''
-    for _,key in ipairs(self.filter_by_fields) do str = str .. v[key] end
+    for _,key in ipairs(self.filter_by_fields) do str = str .. (v[key] or '') end
     return str
   end
 
