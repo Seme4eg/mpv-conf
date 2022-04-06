@@ -28,8 +28,9 @@ local em = {
   line_bottom_margin = 1, -- basically space between lines
   text_color = {
     default = 'ffffff',
-    search = 'ff7c68',
+    search = 'd8a07b',
     current = 'aaaaaa',
+    comment = '636363',
   },
   menu_x_padding = 5, -- this padding for now applies only to 'left', not x
   menu_y_padding = 2, -- but this one applies to both - top & bottom
@@ -43,6 +44,11 @@ local em = {
   list = {
     full = {}, filtered = {}, current_i = nil, pointer_i = 1, show_from_to = {}
   },
+  -- field to compare with when searching for 'current value' by 'current_i'
+  index_field = 'index',
+  -- fields to use when searching for string match / any other custom searching
+  -- if value has 0 length, then search list item itself
+  filter_by_fields = {},
 
 
   -- 'private' values that are not supposed to be changed from the outside ----
@@ -100,12 +106,38 @@ end
 function em:filter()
   -- default filter func, might be redefined in main script
   local result = {}
+
+  local function get_full_search_str(v)
+    local str = ''
+    for _,key in ipairs(self.filter_by_fields) do str = str .. v[key] end
+    return str
+  end
+
   for _,v in ipairs(self.list.full) do
-    if v.content:lower():find(self.line:lower()) then
-      table.insert(result, v)
+    -- if filter_by_fields has 0 length, then search list item itself
+    if #self.filter_by_fields == 0 then
+      if self:search_method(v) then table.insert(result, v) end
+    else
+      -- NOTE: we might use search_method on fiels separately like this:
+      -- for _,key in ipairs(self.filter_by_fields) do
+      --   if self:search_method(v[key]) then table.insert(result, v) end
+      -- end
+      -- But since im planning to implement fuzzy search in future i need full
+      -- search string here
+      if self:search_method(get_full_search_str(v)) then
+        table.insert(result, v)
+      end
     end
   end
   return result
+end
+
+-- TODO: implement fuzzy search and match highlights
+function em:search_method(str)
+  -- also might be redefined by main script
+
+  -- convert to string just to make sure..
+  return tostring(str):lower():find(self.line:lower())
 end
 
 function em:set_from_to(reset_flag)
@@ -114,8 +146,8 @@ function em:set_from_to(reset_flag)
   local to_show = self.lines_to_show
   local total = #self:current()
 
-  if reset_flag or to_show > total then
-    self.list.show_from_to = {1, total}
+  if reset_flag or to_show >= total then
+    self.list.show_from_to = {1, math.min(to_show, total)}
     return
   end
 
@@ -185,29 +217,8 @@ function em:update(err_code)
   -- didn't find better place to handle filtered list update
   if self.line ~= self.prev_line then self:filter_wrapper() end
 
-  -- REVIEW: for now i don't see normal way of mergin this func with below one
-  -- but it's being used only once
-  local function reset_styles()
-    local a = assdraw.ass_new()
-    a:append('{\\an7\\bord0\\shad0}') -- alignment top left, border 0, shadow 0
-    a:append('{\\fs' .. self.font_size .. '}')
-    return a.text
-  end
-
-  -- function to get rid of some copypaste
-  local function ass_new_wrapper()
-    local a = assdraw.ass_new()
-    a:new_event()
-    a:append(reset_styles())
-    return a
-  end
-
-  local function get_font_color(style)
-    return '{\\1c&H' .. self.text_color[style] .. '}'
-  end
-
   local function get_background()
-    local a = ass_new_wrapper()
+    local a = self:ass_new_wrapper()
     a:append('{\\1c&H1c1c1c\\1a&H19}') -- background color & opacity
     a:pos(0, 0)
     a:draw_start()
@@ -217,18 +228,18 @@ function em:update(err_code)
   end
 
   local function get_search_header()
-    local a = ass_new_wrapper()
+    local a = self:ass_new_wrapper()
 
     a:pos(self.menu_x_padding, menu_y_pos + self.menu_y_padding)
 
     local search_prefix = table.concat({
-        get_font_color('search'),
+        self:get_font_color('search'),
         (#self:current() ~= 0 and self.list.pointer_i or '!'),
         '/', #self:current(), '\\h\\h', self.search_heading, ':\\h'
     }) ;
 
     a:append(search_prefix)
-    a:append(get_font_color'default') -- reset font color after search prefix
+    a:append(self:get_font_color'default') -- reset font color after search prefix
 
     -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
     -- inline with the surrounding text, but it sets the advance to the width
@@ -246,8 +257,8 @@ function em:update(err_code)
     local after_cur = self:ass_escape(self.line:sub(self.cursor))
 
     a:append(table.concat({
-                 before_cur, cglyph, reset_styles(),
-                 get_font_color('default'), after_cur,
+                 before_cur, cglyph, self:reset_styles(),
+                 self:get_font_color('default'), after_cur,
                  (err_code and '\\h' .. self.error_codes[err_code] or "")
     }))
 
@@ -269,7 +280,7 @@ function em:update(err_code)
 
     local function apply_highlighting(y)
       a:new_event()
-      a:append(reset_styles())
+      a:append(self:reset_styles())
       a:append('{\\1c&Hffffff\\1a&HE6}') -- background color & opacity
       a:pos(0, 0)
       a:draw_start()
@@ -284,15 +295,13 @@ function em:update(err_code)
       local value = assert(self:current()[i], 'no value with index ' .. i)
       local y_offset = menu_y_pos + self.menu_x_padding +
         (line_height * (i - self.list.show_from_to[1] + 1))
-      local style = (self.list.current_i == value.index) and 'current' or 'default'
 
       if i == self.list.pointer_i then apply_highlighting(y_offset) end
 
       a:new_event()
-      a:append(reset_styles())
+      a:append(self:reset_styles())
       a:pos(self.menu_x_padding, y_offset)
-      a:append(get_font_color(style))
-      a:append(value.content)
+      a:append(self:get_line(i, value))
     end
 
     return a.text
@@ -309,6 +318,49 @@ function em:update(err_code)
   em.ass:update()
 
 end
+
+-- HELPER FUNCTIONS -----------------------------------------------------------
+
+function em:get_line(_, v) -- [i]ndex, [v]alue
+  -- this func might be redefined in main script to get a custom-formatted line
+  -- default implementation of this func supposes that value.content field is a
+  -- String
+  local a = assdraw.ass_new()
+  local style = (self.list.current_i == v[self.index_field])
+    and 'current' or 'default'
+
+  a:append(self:reset_styles())
+  a:append(self:get_font_color(style))
+  -- content as default field, which is holding string
+  -- no point in moving it to main object since content itself is being
+  -- composed in THIS function, that might (and most likely, should) be
+  -- redefined in main script
+  a:append(v.content or 'Something is off in `get_line` func')
+  return a.text
+end
+
+-- REVIEW: for now i don't see normal way of mergin this func with below one
+-- but it's being used only once
+function em:reset_styles()
+  local a = assdraw.ass_new()
+  a:append('{\\an7\\bord0\\shad0}') -- alignment top left, border 0, shadow 0
+  a:append('{\\fs' .. self.font_size .. '}')
+  return a.text
+end
+
+-- function to get rid of some copypaste
+function em:ass_new_wrapper()
+  local a = assdraw.ass_new()
+  a:new_event()
+  a:append(self:reset_styles())
+  return a
+end
+
+function em:get_font_color(style)
+  return '{\\1c&H' .. self.text_color[style] .. '}'
+end
+
+-- END OF HELPER FUNCTIONS BLOCK ----------------------------------------------
 
 -- params:
 --  - data : {list: {}, [current_i] : num}
@@ -427,7 +479,6 @@ function em:set_active(active)
     end
 
     self:set_from_to()
-    mp.msg.info(self.list.show_from_to[1], self.list.show_from_to[2])
     self:update()
   else
     -- no need to call 'update' in this block cuz 'clear' method is calling it
