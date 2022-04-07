@@ -19,7 +19,7 @@ local em = {
   -- customisable values ------------------------------------------------------
 
   lines_to_show = 17, -- NOT including search line
-  pause_on_start = true,
+  pause_on_open = true,
   resume_on_exit = "only-if-was-paused", -- another possible value is true
 
   -- styles (earlyer it was a table, but required many more steps to pass def-s
@@ -28,7 +28,7 @@ local em = {
   line_bottom_margin = 1, -- basically space between lines
   text_color = {
     default = 'ffffff',
-    search = 'd8a07b',
+    accent = 'd8a07b',
     current = 'aaaaaa',
     comment = '636363',
   },
@@ -233,13 +233,14 @@ function em:update(err_code)
     a:pos(self.menu_x_padding, menu_y_pos + self.menu_y_padding)
 
     local search_prefix = table.concat({
-        self:get_font_color('search'),
+        self:get_font_color('accent'),
         (#self:current() ~= 0 and self.list.pointer_i or '!'),
         '/', #self:current(), '\\h\\h', self.search_heading, ':\\h'
     }) ;
 
     a:append(search_prefix)
-    a:append(self:get_font_color'default') -- reset font color after search prefix
+    -- reset font color after search prefix
+    a:append(self:get_font_color'default')
 
     -- Create the cursor glyph as an ASS drawing. ASS will draw the cursor
     -- inline with the surrounding text, but it sets the advance to the width
@@ -473,7 +474,7 @@ function em:set_active(active)
     self:define_key_bindings()
 
     -- set flag 'was_paused' only if vid wasn't paused before EM init
-    if self.pause_on_start and not mp.get_property_bool("pause", false) then
+    if self.pause_on_open and not mp.get_property_bool("pause", false) then
       mp.set_property_bool("pause", true)
       self.was_paused = true
     end

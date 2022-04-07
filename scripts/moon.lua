@@ -2,42 +2,31 @@ local mp = require 'mp' -- isn't actually required, mp still gonna be defined
 
 -- should not be altered here, edit options in corresponding .conf file
 local opts = {
-  toggle_menu_binding = 'k',
-  lines_to_show = 17, -- NOT including search line
-  pause_on_start = true,
-  resume_on_exit = "only-if-was-paused", -- another possible value is true
+  -- This script has no options used in itself, all of the options below are for
+  -- 'extended-menu' script
 
+  toggle_menu_binding = 'g',
+  lines_to_show = 17,
+  pause_on_open = true,
+  resume_on_exit = "only-if-was-paused",
+
+  -- styles
   font_size=21,
-  line_bottom_margin = 1, -- basically space between lines
-
-
-  -- not rly worth putting in .conf file --------------------------------------
+  line_bottom_margin = 1,
+  menu_x_padding = 5,
+  menu_y_padding = 2,
 
   search_heading = 'Select chapter',
-  -- field to compare with when searching for 'current value' by 'current_i'
   index_field = 'index',
-  -- fields to use when searching for string match / any other custom searching
-  -- if value has 0 length, then search list item itself
   filter_by_fields = {'content'},
 }
 
 (require 'mp.options').read_options(opts, mp.get_script_name())
 
-package.path = mp.command_native({"expand-path", "~~/script-modules/?.lua;"})..package.path
+package.path =
+  mp.command_native({"expand-path", "~~/script-modules/?.lua;"})..package.path
 local em = require "extended-menu"
 
--- You can freely redefine extended-menu methods:
--- - submit(val) -- assuming you passed correct 'data' format to init() will
---    return data[i], which shall contain full list
--- - filter() - data might have different fields so there might be a need to
---    write a custom filter func. It accepts optional 'query' param, otherwise
---    takes current user input. But it MUST return filtered table the SAME
---    format as initial list.
--- - search_method(str) - search method to use given string (line). Must return
---    nil or any non-nil value.
--- - get_line(index, value) - function that composes an individual line, must
---    return String. Beware tho, if you gonna be using assdraw functionality
---    there - do not apply something like pos, alignment, \n and similar styles
 local chapter_menu = em:new(opts)
 
 local chapter = {list = {}, current_i = nil}
