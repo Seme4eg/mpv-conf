@@ -12,9 +12,10 @@ change qt config.py) dir (name it just ~umpv~)
 [[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
 
 ** Compilation
-first install mujs (for js), vapoursynth (for python) and luajit (for lua just
-in time compilation) so the meson script can see those deps and add needed build
-flags before building. Then proceed to [[https://github.com/mpv-player/mpv/#compilation][compilation]] section.
+Install mujs (for js), i ain't usin any js scripts, but just in case,
+vapoursynth (for python) and luajit (for lua just in time compilation) so the
+meson script can see those deps and add needed build flags before building. Then
+proceed to [[https://github.com/mpv-player/mpv/#compilation][compilation]] section.
 
 ** Scripts added [[https://github.com/mpv-player/mpv/wiki/User-Scripts][#user-scripts]]
 *** [[file:scripts/sponsorblock.lua][sponsorblock]]
@@ -27,10 +28,8 @@ mp.add_key_binding("Alt+7", "submit_segment", submit_segment)
 mp.add_key_binding("Alt+u", "upvote_segment", function() return vote("1") end)
 mp.add_key_binding("Alt+d", "downvote_segment", function() return vote("0") end)
 
-*** TODO [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
+*** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
 volume control using decibels, ~j/k~
-
-starts at -12 db?
 
 *** WAIT [[file:scripts/interSubs.lua][interSubs]] [[https://github.com/oltodosel/interSubs][#docs]]
 -- default keybinding to start/stop: F5
@@ -41,8 +40,6 @@ kbd at the bottom of the script
 
 *NOTE* slows everything down *a lot* + triggers only on fullscreen toggle
 
-*** [[file:scripts/mpv_chapters.js][mpv-chapters]] [[https://github.com/zxhzxhz/mpv-chapters][#docs]]
-chapter menu, ~C-/~
 *** IDEA subtitles
 either [[https://github.com/directorscut82/find_subtitles][this]] or [[https://github.com/davidde/mpv-autosub][this]]. Former - press to download, latter - automatic
 also search on scripts page for 'sub-', there are lots of utility scripts for
@@ -56,40 +53,10 @@ and [[https://github.com/liberlanco/mpv-lang-learner][lang-learner]] as a must
 and [[https://github.com/Ben-Kerman/immersive][immersive]] also for learning
 [[https://github.com/fxmarty/rikai-mpv][rikay-mpv]] - special for jap
 [[https://github.com/laelnasan/yomichampv][yomichampv]]
-*** osc-style
-Tried [[https://github.com/422658476/MPV-EASY-Player/tree/master/mpv-easy-data/osc-style][this]] source, wasn't able to get anything decent
 *** [[file:scripts/quack.lua][quack]] [[https://github.com/CounterPillow/mpv-quack][#docs]]
 temporarily reduce the volume after a seek
 *** [[file:scripts/reload.lua][reload]] [[https://github.com/4e6/mpv-reload][#docs]]
 ~ctrl+r~ to reload if anything is wrong / stuck
-*** IDEA [[file:scripts/search-page.lua][search-page]] [[https://github.com/CogentRedTester/mpv-search-page][#docs]]
-*Rewrite dat shit* as in vim with [[https://mpv.io/manual/master/#javascript][JS]]
-
-Also changed esc for Ctrl+[ in [[file:scripts/user-input.lua][user-input.lua]] and altered lines below in
-[[file:script-modules/scroll-list.lua]]
-
-: keybinds = {
-    : {'j', 'scroll_down', function() vars:scroll_down() end, {repeatable = true}},
-    : {'k', 'scroll_up', function() vars:scroll_up() end, {repeatable = true}},
-    : {'Ctrl+[', 'close_browser', function() vars:close() end, {}}
-: }
-
-
-search for keybinds, properties, options and commands and have matching entries display on the OSD.
-
-The default keybinds are listed below, these can be overwritten using input.conf:
-
-f12         script-binding open-search-page
-Shift+f12   script-binding open-search-page/advanced
-            script-message open-page [page]
-            script-message open-page/advanced [page]
-
-The default keybinds are listed below, these can be overwritten using input.conf:
-
-f12         script-binding open-search-page
-Shift+f12   script-binding open-search-page/advanced
-            script-message open-page [page]
-            script-message open-page/advanced [page]
 *** [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
 several deps, view installation section in docs
 *** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
@@ -183,7 +150,7 @@ local changedQuality = 1080
 local enableVP9 = true
 local FPSLimit = 60
 
-*** [?] [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
+*** [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
 *Playlist-view*:
 - ~G~ to toggle gallery view
 - hjkl, C-b/f, g/G, C-[, D[elete]
@@ -197,13 +164,6 @@ local FPSLimit = 60
 *** [[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]]
 
 ** Todo
-*** TODO Rewrite all those LUA scripts as i please
-and make something like leader key (prefix) and vim-ishness possible
-
-Additional info: [[https://www.linuxjournal.com/article/9605?page=0,0][goot article on LUA]]
-
-*NO* js cuz mujs only provides ES5 and for me it's kinda legacy already rip
-
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
@@ -216,8 +176,82 @@ https://github.com/ehoneyse/mpv-open-anilist-page
 *** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
 *** [[https://github.com/Guldoman/mpv_inhibit_gnome][inhibit_gnome]]
 prevents screen blanking in GNOME while playing media.
+** Configuration
+*** mpv.conf file
+:PROPERTIES:
+:header-args: :tangle mpv.conf
+:END:
 
-** Keybindings
+External Sources of this config:
+- https://wiki.archlinux.org/title/mpv    <-- READ WHOLE
+- https://github.com/hl2guide/better-mpv-config
+- https://raw.githubusercontent.com/classicjazz/mpv-config/master/mpv.conf
+
+#+begin_src conf
+vo=gpu         # Uses GPU-accelerated video output by default.
+profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
+scale=ewa_lanczossharp
+cscale=ewa_lanczossharp
+
+# ===== Motion Interpolation =====
+# 3 settings below drop performance and make things laggy
+# video-sync=display-resample
+# interpolation
+# tscale=oversample # smoothmotion
+
+border=no              # hides the window title bar
+
+# term-osd-bar=yes     # displays a progress bar on the terminal
+cursor-autohide=2000 # autohides the cursor after 1s
+
+# Sets a custom font
+osd-font='Iosevka'
+# osd-font-size=45
+osd-scale=0.5
+
+save-position-on-quit=yes
+
+cache=yes # Uses a large seekable RAM cache even for local input.
+# cache-secs=300
+# Uses extra large RAM cache (needs cache=yes to make it useful).
+demuxer-max-bytes=1800M
+demuxer-max-back-bytes=1200M
+
+# Sets the profile restore method to "copy if equal"
+profile-restore=copy-equal
+
+# ===== Audio =====
+# volume=60
+af-add='dynaudnorm=g=5:f=250:r=0.9:p=0.5' # Normalizes audio
+af=scaletempo2
+
+# ===== Color Space =====
+target-trc=auto
+gamma-auto
+vf=format=colorlevels=full:colormatrix=auto
+video-output-levels=full
+
+# ===== Dithering =====
+dither-depth=auto
+temporal-dither=yes
+dither=fruit
+
+# ===== Debanding =====
+deband=yes          # enabled by default
+deband-iterations=4 # deband steps
+deband-threshold=48 # deband strength
+deband-range=16     # deband range
+deband-grain=48     # dynamic grain: set to "0" if using the static grain shader
+
+# ===== Subtitles =====
+blend-subtitles=yes
+sub-auto=fuzzy # Enable fuzzy searching:
+
+# === My customs ===
+no-input-builtin-bindings
+osd-font-size=45
+#+end_src
+*** Keybindings
 :PROPERTIES:
 :header-args: :tangle input.conf
 :END:
@@ -250,7 +284,7 @@ If this is enabled, treat all the following bindings as default:
 default-bindings start
 #+end_src
 
-*** Playback
+**** Playback
 #+begin_src conf
 # Seek units are in seconds, but note that these are limited by keyframes
 l seek  10                          # seek 5 seconds forward
@@ -285,7 +319,7 @@ PAUSEONLY set pause yes                # pause
 FORWARD seek 60                        # seek 1 minute forward
 REWIND seek -60                        # seek 1 minute backward
 #+end_src
-*** [?] Subtitles
+**** [?] Subtitles
 TEST ~Alt+Ctrl+C~
 
 #+begin_src conf
@@ -304,7 +338,7 @@ Shift+f add sub-scale -0.1             # decrease the subtitle font size
 Ctrl+Shift+LEFT sub-step -1            # change subtitle timing such that the previous subtitle is displayed
 Ctrl+Shift+RIGHT sub-step 1            # change subtitle timing such that the next subtitle is displayed
 
-*** Audio
+**** Audio
 #+begin_src conf
 ctrl++ add audio-delay 0.100           # change audio/video sync by delaying the audio
 ctrl+- add audio-delay -0.100          # change audio/video sync by shifting the audio earlier
@@ -312,7 +346,7 @@ j add volume -2
 k add volume 2
 m cycle mute                           # toggle mute
 #+end_src
-*** Shaders
+**** Shaders
 #+NAME: Anime4K
 #+begin_src conf
 CTRL+1 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode A (Fast)"
@@ -324,7 +358,7 @@ CTRL+6 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.
 CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
 #+end_src
 
-*** Filters
+**** Filters
 #+begin_src conf
 Alt+1 add contrast -1
 Alt+2 add contrast 1
@@ -336,7 +370,7 @@ Alt+7 add saturation -1
 Alt+8 add saturation 1
 #+end_src
 
-*** Misc
+**** Misc
 #+begin_src conf
 # Quitting
 # q quit
@@ -369,7 +403,7 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 ^ show-text ${track-list}             # show the list of video, audio and sub tracks
 #+end_src
 
-*** Unknown purpose
+**** Unknown purpose
 #w add panscan -0.1                     # decrease panscan
 #W add panscan +0.1                     # shrink black bars by cropping the video
 #e add panscan +0.1                     # shrink black bars by cropping the video
@@ -378,5 +412,153 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #ctrl+h cycle-values hwdec "auto" "no"  # toggle hardware decoding
 
 #d cycle deinterlace                    # toggle the deinterlacing filter
-*** TODO Known free
+**** TODO Known free
 C, *
+** Inactive configuration settings
+#+begin_src conf
+# ===== Anti-Ringing =====
+# scale-antiring=0.7 # luma upscale deringing
+# dscale-antiring=0.7 # luma downscale deringing
+# cscale-antiring=0.7 # chroma upscale deringing
+
+# profile=svp
+
+# ===== Profiles =====
+# [svp]
+# input-ipc-server=/tmp/mpvsocket     # Receives input from SVP
+# hr-seek-framedrop=no                # Fixes audio desync
+# resume-playback=no                  # Not compatible with SVP
+
+# Can fix stuttering in some cases, in other cases probably causes it. Try it if you experience stuttering.
+#opengl-early-flush=yes
+
+
+# ===== Upscaling & Processing =====
+# glsl-shaders-clr # luma upscaling
+# note: any FSRCNNX above FSRCNNX_x2_8-0-4-1 is not worth the additional computional overhead
+# glsl-shaders="~/.config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl"
+# scale=ewa_lanczos # luma downscaling
+# note: ssimdownscaler is tuned for mitchell and downscaling=no
+# glsl-shaders-append="~/.config/mpv/shaders/SSimDownscaler.glsl"
+# dscale=mitchell
+# linear-downscaling=no # chroma upscaling and downscaling
+# glsl-shaders-append="~/.config/mpv/shaders/KrigBilateral.glsl"
+# cscale=mitchell
+# sigmoid-upscaling=yes
+
+
+
+# ===== Custom Profiles =====
+
+[4k60] # 2160p @ 60fps (3840x2160 UHDTV)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=4k60
+profile-cond=((width ==3840 and height ==2160) and p["estimated-vf-fps"]>=31)
+# deband=yes # necessary to avoid blue screen with KrigBilateral.glsl
+deband=no # turn off debanding because presume wide color gamut
+interpolation=no # turn off interpolation because presume 60fps
+# UHD videos are already 4K so no luma upscaling is needed
+# UHD videos are YUV420 so chroma upscaling is still needed
+glsl-shaders-clr
+# glsl-shaders="~/.config/mpv/shaders/KrigBilateral.glsl" # enable if your hardware can support it
+interpolation=no # no motion interpolation required because 60fps is hardware ceiling
+# no deinterlacer required because progressive
+
+[4k30] # 2160p @ 24-30fps (3840x2160 UHDTV)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=4k30
+profile-cond=((width ==3840 and height ==2160) and p["estimated-vf-fps"]<31)
+# deband=yes # necessary to avoid blue screen with KrigBilateral.glsl
+deband=no # turn off debanding because presume wide color gamut
+# UHD videos are already 4K so no luma upscaling is needed
+# UHD videos are YUV420 so chroma upscaling is still needed
+glsl-shaders-clr
+# glsl-shaders="~/.config/mpv/shaders/KrigBilateral.glsl" # enable if your hardware can support it
+# apply motion interpolation
+# no deinterlacer required because progressive
+
+[full-hd60] # 1080p @ 60fps (progressive ATSC)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=full-hd60
+profile-cond=((width ==1920 and height ==1080) and not p["video-frame-info/interlaced"] and p["estimated-vf-fps"]>=31)
+# apply all luma and chroma upscaling and downscaling settings
+interpolation=no # no motion interpolation required because 60fps is hardware ceiling
+# no deinterlacer required because progressive
+
+[full-hd30] # 1080p @ 24-30fps (NextGen TV/ATSC 3.0, progressive Blu-ray)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=full-hd30
+profile-cond=((width ==1920 and height ==1080) and not p["video-frame-info/interlaced"] and p["estimated-vf-fps"]<31)
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+# no deinterlacer required because progressive
+
+[full-hd-interlaced] # 1080i @ 24-30fps (HDTV, interlaced Blu-rays)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=full-hd-interlaced
+profile-cond=((width ==1920 and height ==1080) and p["video-frame-info/interlaced"] and p["estimated-vf-fps"]<31)
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+vf=bwdif # apply FFMPEG's bwdif deinterlacer
+
+[hd] # 720p @ 60 fps (HDTV, Blu-ray - progressive)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=hd
+profile-cond=(width ==1280 and height ==720)
+# apply all luma and chroma upscaling and downscaling settings
+interpolation=no # no motion interpolation required because 60fps is hardware ceiling
+# no deinterlacer required because progressive
+
+[sdtv-ntsc] # 640x480, 704x480, 720x480 @ 30fps (NTSC DVD - interlaced)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=sdtv-ntsc
+profile-cond=((width ==640 and height ==480) or (width ==704 and height ==480) or (width ==720 and height ==480))
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+vf=bwdif # apply FFMPEG's bwdif deinterlacer
+
+[sdtv-pal] # 352x576, 480x576, 544x576, 720x576 @ 30fps (PAL broadcast or DVD - interlaced)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=sdtv-pal
+profile-cond=((width ==352 and height ==576) or (width ==480 and height ==576) or (width ==544 and height ==576) or (width ==720 and height ==576))
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+vf=bwdif # apply FFMPEG's bwdif deinterlacer
+
+[default]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+
+# ===== File Type Profiles =====
+# GIF Files
+[extension.gif]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=gif
+cache=no
+no-pause
+loop-file=yes
+# WebM Files
+[extension.webm]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=webm
+no-pause
+loop-file=yes
+
+# ===== Protocol Specific Configuration =====
+
+[protocol.http]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=http
+hls-bitrate=max # use max quality for HLS streams
+cache=yes
+no-cache-pause # don't pause when the cache runs low
+
+[protocol.https]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=https
+profile=protocol.http
+
+[protocol.ytdl]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=ytdl
+profile=protocol.http
+#+end_src
