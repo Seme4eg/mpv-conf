@@ -1,15 +1,7 @@
 #+TITLE:MPV
 #+STARTUP: nohideblocks
 
-[[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i used for "getting in"), [[https://mpv.io/manual/master/#keyboard-control][keybindings]]
-
-Download and put [[https://github.com/hl2guide/better-mpv-config][better-mpv-config]] in your mpv config dir (~/.config/mpv in my
-case)
-
-Also put [[https://github.com/mpv-player/mpv/blob/master/TOOLS/umpv][umpv]] script in same (not necessarily, but othervise don't forget to
-change qt config.py) dir (name it just ~umpv~)
-
-[[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
+[[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i deem to b a *must-read*)
 
 ** Contents :TOC_3:noexport:
   - [[#compilation][Compilation]]
@@ -35,8 +27,9 @@ change qt config.py) dir (name it just ~umpv~)
   - [[#configuration][Configuration]]
     - [[#mpvconf][mpv.conf]]
     - [[#inputconf][input.conf]]
-  - [[#to-do-list-04][To do list]]
+  - [[#to-do-list-05][To do list]]
     - [[#viewtube-for-my-main-pc][viewtube for my main pc?]]
+    - [[#mpvnet-for-windows-][mpv.net for windows ?]]
     - [[#hold-mpv-as-a-music-player][HOLD mpv as a music player]]
     - [[#idea-copy-paste-url][IDEA copy-paste-url]]
     - [[#idea-anime][IDEA Anime]]
@@ -53,17 +46,19 @@ A fully-featured port of [SponsorBlock](https://github.com/ajayyy/SponsorBlock) 
 
 *NOTE*: i've set ~local_database = false~ in script file ([[https://github.com/po5/mpv_sponsorblock/issues/50][gh-issue]])
 
+#+begin_src lua
 mp.add_key_binding("Alt+6", "set_segment", set_segment)
 mp.add_key_binding("Alt+7", "submit_segment", submit_segment)
 mp.add_key_binding("Alt+u", "upvote_segment", function() return vote("1") end)
 mp.add_key_binding("Alt+d", "downvote_segment", function() return vote("0") end)
+#+end_src
 
 *** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
 volume control using decibels, ~j/k~
 
 *** WAIT [[file:scripts/interSubs.lua][interSubs]] [[https://github.com/oltodosel/interSubs][#docs]]
--- default keybinding to start/stop: F5
--- default keybinding to hide/show: F6
+- default keybinding to start/stop: F5
+- default keybinding to hide/show: F6
 *** TODO mpv-lastfm [[https://github.com/l29ah/w3crapcli/blob/master/last.fm/mpv-lastfm.lua][#docs]]
 *** TODO [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
 kbd at the bottom of the script
@@ -92,8 +87,8 @@ several deps, view installation section in docs
 *** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
 Read script top comment for installation & keybindings (yt api key i've created)
 
-mp.add_key_binding(nil, "yt", open_search_input)
-mp.add_key_binding("/", "youtube-search", function()
+- mp.add_key_binding(nil, "yt", open_search_input)
+- mp.add_key_binding("/", "youtube-search", function()
 
 \+ j/k and C-[
 
@@ -172,22 +167,26 @@ list_ignored_keybind=["B", "b", "K", "c", "C"]
 Change youtube video quality on the fly.
 
 toggle_menu_binding=alt+q
+
 k,j
 
 *** [[file:scripts/youtube-upnext.lua][youtube-upnext]] [[https://github.com/cvzi/mpv-youtube-upnext][#docs]]
 Fetch upnext/recommended videos from youtube
 
 toggle_menu_binding=alt+.
+
 k,j
+
 *** [[file:scripts/ytdlautoformat.lua][ytdlautoformat]] [[https://github.com/Samillion/mpv-ytdlautoformat][#docs]]
 A simple mpv script to automatically change ytdl-format (for yt-dlp, youtube-dl)
 specifically if the URL is Youtube or Twitch.
 
 /Changd lines:/
-
+#+begin_src lua
 local changedQuality = 1080
 local enableVP9 = true
 local FPSLimit = 60
+#+end_src
 
 *** [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
 *Playlist-view*:
@@ -199,6 +198,7 @@ local FPSLimit = 60
 - ~C~ to toggle contact view (changed not in .conf tho, there is no option)
 - mouse_support=no
 - hjkl, C-b/f, g/G, C-[
+
 *** Scripts to keep in mind
 **** [[https://github.com/cvzi/mpv-youtube-download][mpv-youtube-download]]
 **** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
@@ -621,8 +621,9 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #d cycle deinterlace                    # toggle the deinterlacing filter
 #+end_src
 
-** To do list [0/4]
+** To do list [0/5]
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
+*** TODO [[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
 scripts/ which might b sometime useful again for my main pc
