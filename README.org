@@ -169,22 +169,14 @@ local FPSLimit = 60
 - ~C~ to toggle contact view (changed not in .conf tho, there is no option)
 - mouse_support=no
 - hjkl, C-b/f, g/G, C-[
+*** Scripts to keep in mind
+**** [[https://github.com/cvzi/mpv-youtube-download][mpv-youtube-download]]
+**** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
+**** [[https://github.com/Guldoman/mpv_inhibit_gnome][inhibit_gnome]]
+prevents screen blanking in GNOME while playing media.
 ** Shaders added [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]]
 *** [[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]]
 
-** Todo [0/4]
-*** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
-*** HOLD mpv as a music player
-[[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
-scripts/ which might b sometime useful again for my main pc
-*** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
-*** IDEA Anime
-https://github.com/ehoneyse/mpv-open-anilist-page
-** To keep in mind
-*** [[https://github.com/cvzi/mpv-youtube-download][mpv-youtube-download]]
-*** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
-*** [[https://github.com/Guldoman/mpv_inhibit_gnome][inhibit_gnome]]
-prevents screen blanking in GNOME while playing media.
 ** Configuration
 *** mpv.conf
 :PROPERTIES:
@@ -278,6 +270,164 @@ no-input-builtin-bindings
 osd-font-size=45
 #+end_src
 
+**** Inactive /mpv.conf/ settings
+:PROPERTIES:
+:header-args: :tangle no
+:END:
+
+Can fix stuttering in some cases, in other cases probably causes it. Try it if
+you experience stuttering:
+
+~opengl-early-flush=yes~
+
+***** Anti-Ringing
+#+begin_src conf
+# scale-antiring=0.7  # luma upscale deringing
+# dscale-antiring=0.7 # luma downscale deringing
+# cscale-antiring=0.7 # chroma upscale deringing
+#+end_src
+
+***** Profiles
+#+begin_src conf
+# profile=svp
+
+# [svp]
+# input-ipc-server=/tmp/mpvsocket     # Receives input from SVP
+# hr-seek-framedrop=no                # Fixes audio desync
+# resume-playback=no                  # Not compatible with SVP
+#+end_src
+
+***** Upscaling & Processing
+#+begin_src conf
+# glsl-shaders-clr # luma upscaling
+# note: any FSRCNNX above FSRCNNX_x2_8-0-4-1 is not worth the additional computional overhead
+# glsl-shaders="~/.config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl"
+# scale=ewa_lanczos # luma downscaling
+# note: ssimdownscaler is tuned for mitchell and downscaling=no
+# glsl-shaders-append="~/.config/mpv/shaders/SSimDownscaler.glsl"
+# dscale=mitchell
+# linear-downscaling=no # chroma upscaling and downscaling
+# glsl-shaders-append="~/.config/mpv/shaders/KrigBilateral.glsl"
+# cscale=mitchell
+# sigmoid-upscaling=yes
+#+end_src
+
+***** Custom Profiles
+#+begin_src conf
+[4k60] # 2160p @ 60fps (3840x2160 UHDTV)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=4k60
+profile-cond=((width ==3840 and height ==2160) and p["estimated-vf-fps"]>=31)
+# deband=yes # necessary to avoid blue screen with KrigBilateral.glsl
+deband=no # turn off debanding because presume wide color gamut
+interpolation=no # turn off interpolation because presume 60fps
+# UHD videos are already 4K so no luma upscaling is needed
+# UHD videos are YUV420 so chroma upscaling is still needed
+glsl-shaders-clr
+# glsl-shaders="~/.config/mpv/shaders/KrigBilateral.glsl" # enable if your hardware can support it
+interpolation=no # no motion interpolation required because 60fps is hardware ceiling
+# no deinterlacer required because progressive
+
+[4k30] # 2160p @ 24-30fps (3840x2160 UHDTV)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=4k30
+profile-cond=((width ==3840 and height ==2160) and p["estimated-vf-fps"]<31)
+# deband=yes # necessary to avoid blue screen with KrigBilateral.glsl
+deband=no # turn off debanding because presume wide color gamut
+# UHD videos are already 4K so no luma upscaling is needed
+# UHD videos are YUV420 so chroma upscaling is still needed
+glsl-shaders-clr
+# glsl-shaders="~/.config/mpv/shaders/KrigBilateral.glsl" # enable if your hardware can support it
+# apply motion interpolation
+# no deinterlacer required because progressive
+
+[full-hd60] # 1080p @ 60fps (progressive ATSC)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=full-hd60
+profile-cond=((width ==1920 and height ==1080) and not p["video-frame-info/interlaced"] and p["estimated-vf-fps"]>=31)
+# apply all luma and chroma upscaling and downscaling settings
+interpolation=no # no motion interpolation required because 60fps is hardware ceiling
+# no deinterlacer required because progressive
+
+[full-hd30] # 1080p @ 24-30fps (NextGen TV/ATSC 3.0, progressive Blu-ray)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=full-hd30
+profile-cond=((width ==1920 and height ==1080) and not p["video-frame-info/interlaced"] and p["estimated-vf-fps"]<31)
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+# no deinterlacer required because progressive
+
+[full-hd-interlaced] # 1080i @ 24-30fps (HDTV, interlaced Blu-rays)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=full-hd-interlaced
+profile-cond=((width ==1920 and height ==1080) and p["video-frame-info/interlaced"] and p["estimated-vf-fps"]<31)
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+vf=bwdif # apply FFMPEG's bwdif deinterlacer
+
+[hd] # 720p @ 60 fps (HDTV, Blu-ray - progressive)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=hd
+profile-cond=(width ==1280 and height ==720)
+# apply all luma and chroma upscaling and downscaling settings
+interpolation=no # no motion interpolation required because 60fps is hardware ceiling
+# no deinterlacer required because progressive
+
+[sdtv-ntsc] # 640x480, 704x480, 720x480 @ 30fps (NTSC DVD - interlaced)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=sdtv-ntsc
+profile-cond=((width ==640 and height ==480) or (width ==704 and height ==480) or (width ==720 and height ==480))
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+vf=bwdif # apply FFMPEG's bwdif deinterlacer
+
+[sdtv-pal] # 352x576, 480x576, 544x576, 720x576 @ 30fps (PAL broadcast or DVD - interlaced)
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=sdtv-pal
+profile-cond=((width ==352 and height ==576) or (width ==480 and height ==576) or (width ==544 and height ==576) or (width ==720 and height ==576))
+# apply all luma and chroma upscaling and downscaling settings
+# apply motion interpolation
+vf=bwdif # apply FFMPEG's bwdif deinterlacer
+
+[default]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+#+end_src
+
+***** File Type Profiles
+#+begin_src conf
+# GIF Files
+[extension.gif]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=gif
+cache=no
+no-pause
+loop-file=yes
+# WebM Files
+[extension.webm]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=webm
+no-pause
+loop-file=yes
+#+end_src
+***** Protocol Specific Configuration
+#+begin_src conf
+[protocol.http]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=http
+hls-bitrate=max # use max quality for HLS streams
+cache=yes
+no-cache-pause # don't pause when the cache runs low
+
+[protocol.https]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=https
+profile=protocol.http
+
+[protocol.ytdl]
+profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+profile-desc=ytdl
+profile=protocol.http
+#+end_src
 
 *** input.conf
 :PROPERTIES:
@@ -430,6 +580,7 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #+end_src
 
 **** Unknown purpose
+#+begin_src conf :tangle no
 #w add panscan -0.1                     # decrease panscan
 #W add panscan +0.1                     # shrink black bars by cropping the video
 #e add panscan +0.1                     # shrink black bars by cropping the video
@@ -438,159 +589,13 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #ctrl+h cycle-values hwdec "auto" "no"  # toggle hardware decoding
 
 #d cycle deinterlace                    # toggle the deinterlacing filter
-** TODO Known free
-C, *
-** Inactive /mpv.conf/ settings
-Can fix stuttering in some cases, in other cases probably causes it. Try it if
-you experience stuttering:
-
-~opengl-early-flush=yes~
-
-*** Anti-Ringing
-#+begin_src conf
-# scale-antiring=0.7 # luma upscale deringing
-# dscale-antiring=0.7 # luma downscale deringing
-# cscale-antiring=0.7 # chroma upscale deringing
 #+end_src
 
-*** Profiles 
-#+begin_src conf
-# profile=svp
-
-# [svp]
-# input-ipc-server=/tmp/mpvsocket     # Receives input from SVP
-# hr-seek-framedrop=no                # Fixes audio desync
-# resume-playback=no                  # Not compatible with SVP
-#+end_src
-
-*** Upscaling & Processing
-#+begin_src conf
-# glsl-shaders-clr # luma upscaling
-# note: any FSRCNNX above FSRCNNX_x2_8-0-4-1 is not worth the additional computional overhead
-# glsl-shaders="~/.config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl"
-# scale=ewa_lanczos # luma downscaling
-# note: ssimdownscaler is tuned for mitchell and downscaling=no
-# glsl-shaders-append="~/.config/mpv/shaders/SSimDownscaler.glsl"
-# dscale=mitchell
-# linear-downscaling=no # chroma upscaling and downscaling
-# glsl-shaders-append="~/.config/mpv/shaders/KrigBilateral.glsl"
-# cscale=mitchell
-# sigmoid-upscaling=yes
-#+end_src
-
-*** Custom Profiles
-#+begin_src conf
-[4k60] # 2160p @ 60fps (3840x2160 UHDTV)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=4k60
-profile-cond=((width ==3840 and height ==2160) and p["estimated-vf-fps"]>=31)
-# deband=yes # necessary to avoid blue screen with KrigBilateral.glsl
-deband=no # turn off debanding because presume wide color gamut
-interpolation=no # turn off interpolation because presume 60fps
-# UHD videos are already 4K so no luma upscaling is needed
-# UHD videos are YUV420 so chroma upscaling is still needed
-glsl-shaders-clr
-# glsl-shaders="~/.config/mpv/shaders/KrigBilateral.glsl" # enable if your hardware can support it
-interpolation=no # no motion interpolation required because 60fps is hardware ceiling
-# no deinterlacer required because progressive
-
-[4k30] # 2160p @ 24-30fps (3840x2160 UHDTV)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=4k30
-profile-cond=((width ==3840 and height ==2160) and p["estimated-vf-fps"]<31)
-# deband=yes # necessary to avoid blue screen with KrigBilateral.glsl
-deband=no # turn off debanding because presume wide color gamut
-# UHD videos are already 4K so no luma upscaling is needed
-# UHD videos are YUV420 so chroma upscaling is still needed
-glsl-shaders-clr
-# glsl-shaders="~/.config/mpv/shaders/KrigBilateral.glsl" # enable if your hardware can support it
-# apply motion interpolation
-# no deinterlacer required because progressive
-
-[full-hd60] # 1080p @ 60fps (progressive ATSC)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=full-hd60
-profile-cond=((width ==1920 and height ==1080) and not p["video-frame-info/interlaced"] and p["estimated-vf-fps"]>=31)
-# apply all luma and chroma upscaling and downscaling settings
-interpolation=no # no motion interpolation required because 60fps is hardware ceiling
-# no deinterlacer required because progressive
-
-[full-hd30] # 1080p @ 24-30fps (NextGen TV/ATSC 3.0, progressive Blu-ray)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=full-hd30
-profile-cond=((width ==1920 and height ==1080) and not p["video-frame-info/interlaced"] and p["estimated-vf-fps"]<31)
-# apply all luma and chroma upscaling and downscaling settings
-# apply motion interpolation
-# no deinterlacer required because progressive
-
-[full-hd-interlaced] # 1080i @ 24-30fps (HDTV, interlaced Blu-rays)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=full-hd-interlaced
-profile-cond=((width ==1920 and height ==1080) and p["video-frame-info/interlaced"] and p["estimated-vf-fps"]<31)
-# apply all luma and chroma upscaling and downscaling settings
-# apply motion interpolation
-vf=bwdif # apply FFMPEG's bwdif deinterlacer
-
-[hd] # 720p @ 60 fps (HDTV, Blu-ray - progressive)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=hd
-profile-cond=(width ==1280 and height ==720)
-# apply all luma and chroma upscaling and downscaling settings
-interpolation=no # no motion interpolation required because 60fps is hardware ceiling
-# no deinterlacer required because progressive
-
-[sdtv-ntsc] # 640x480, 704x480, 720x480 @ 30fps (NTSC DVD - interlaced)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=sdtv-ntsc
-profile-cond=((width ==640 and height ==480) or (width ==704 and height ==480) or (width ==720 and height ==480))
-# apply all luma and chroma upscaling and downscaling settings
-# apply motion interpolation
-vf=bwdif # apply FFMPEG's bwdif deinterlacer
-
-[sdtv-pal] # 352x576, 480x576, 544x576, 720x576 @ 30fps (PAL broadcast or DVD - interlaced)
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=sdtv-pal
-profile-cond=((width ==352 and height ==576) or (width ==480 and height ==576) or (width ==544 and height ==576) or (width ==720 and height ==576))
-# apply all luma and chroma upscaling and downscaling settings
-# apply motion interpolation
-vf=bwdif # apply FFMPEG's bwdif deinterlacer
-
-[default]
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-#+end_src
-
-*** File Type Profiles
-#+begin_src conf
-# GIF Files
-[extension.gif]
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=gif
-cache=no
-no-pause
-loop-file=yes
-# WebM Files
-[extension.webm]
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=webm
-no-pause
-loop-file=yes
-#+end_src
-*** Protocol Specific Configuration
-#+begin_src conf
-[protocol.http]
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=http
-hls-bitrate=max # use max quality for HLS streams
-cache=yes
-no-cache-pause # don't pause when the cache runs low
-
-[protocol.https]
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=https
-profile=protocol.http
-
-[protocol.ytdl]
-profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
-profile-desc=ytdl
-profile=protocol.http
-#+end_src
+** Todo [0/4]
+*** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
+*** HOLD mpv as a music player
+[[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
+scripts/ which might b sometime useful again for my main pc
+*** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
+*** IDEA Anime
+https://github.com/ehoneyse/mpv-open-anilist-page
