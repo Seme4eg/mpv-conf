@@ -80,6 +80,7 @@ Keybindings that will be used to navigate up on the list:
 
 k/j, C-b/f, g[g]/G, C-[, / as in vim
 
+#+begin_src conf
 #--Keybind that will be used to load highlighted entry from the list
 list_select_keybind=["ENTER"]
 #--Keybind that will be used to add the selected entry to playlist
@@ -92,13 +93,17 @@ list_delete_keybind=["DEL"]
 list_search_not_typing_mode_keybind=["CTRL+ENTER"]
 #--Keybind thats are ignored when list is open
 list_ignored_keybind=["h", "H", "r", "R", "b", "B", "k", "K"]
+#+end_src
 
 **** *simplehistory* Default Keybinds:
-Ctrl+r resume in any previously closed videos / idle: loads and resumes last played video
-Alt+r add last closed video into playlist / idle: loads last closed video without resuming
-h opens History list (Log Manager)
-r opens History list - filtered with recent items (Log Manager)
+- Ctrl+r resume in any previously closed videos / idle: loads and resumes last
+  played video
+- Alt+r add last closed video into playlist / idle: loads last closed video
+  without resuming
+- h opens History list (Log Manager)
+- r opens History list - filtered with recent items (Log Manager)
 
+#+begin_src conf
 history_resume_keybind=["Alt+>"]
 history_load_last_keybind=["alt+<"]
 open_list_keybind=[ ["Alt+h"] ]
@@ -107,8 +112,11 @@ history_incognito_mode_keybind=["Alt+H"]
 next_filter_sequence_keybind=["l"]
 previous_filter_sequence_keybind=["h"]
 list_cycle_sort_keybind=["o"]
+#+end_src
 
 *Vim*: hjkl, C-b/f, g/G, /
+
+#+begin_src conf
 list_highlight_move_keybind=["SHIFT"]
 list_highlight_all_keybind=["h"]
 list_unhighlight_all_keybind=["H"]
@@ -123,11 +131,12 @@ list_delete_highlighted_keybind=["D"]
 list_search_not_typing_mode_keybind=["ALT+ENTER"]
 #--Keybind thats are ignored when list is open
 list_ignored_keybind=["B", "b", "K", "c", "C"]
+#+end_src
 
 **** *undoredo* Default Keybinds
-mp.add_key_binding("u", "undo", undo)
-mp.add_key_binding("r", "redo", redo)
-mp.add_key_binding("U", "undoLoop", undoLoop)
+- mp.add_key_binding("u", "undo", undo)
+- mp.add_key_binding("r", "redo", redo)
+- mp.add_key_binding("U", "undoLoop", undoLoop)
 
 *** [[file:scripts/youtube-quality.lua][youtube-quality]] [[https://github.com/jgreco/mpv-youtube-quality][#docs]]
 Change youtube video quality on the fly.
@@ -163,7 +172,7 @@ local FPSLimit = 60
 ** Shaders added [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]]
 *** [[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]]
 
-** Todo
+** Todo [0/4]
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
@@ -177,7 +186,7 @@ https://github.com/ehoneyse/mpv-open-anilist-page
 *** [[https://github.com/Guldoman/mpv_inhibit_gnome][inhibit_gnome]]
 prevents screen blanking in GNOME while playing media.
 ** Configuration
-*** mpv.conf file
+*** mpv.conf
 :PROPERTIES:
 :header-args: :tangle mpv.conf
 :END:
@@ -192,12 +201,6 @@ vo=gpu         # Uses GPU-accelerated video output by default.
 profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
 scale=ewa_lanczossharp
 cscale=ewa_lanczossharp
-
-# ===== Motion Interpolation =====
-# 3 settings below drop performance and make things laggy
-# video-sync=display-resample
-# interpolation
-# tscale=oversample # smoothmotion
 
 border=no              # hides the window title bar
 
@@ -219,39 +222,64 @@ demuxer-max-back-bytes=1200M
 
 # Sets the profile restore method to "copy if equal"
 profile-restore=copy-equal
+#+end_src
 
-# ===== Audio =====
-# volume=60
+**** Motion Interpolation
+Enabling those will significantly drop performance on my machine
+
+#+begin_src conf :tangle no
+# 3 settings below drop performance and make things laggy
+# video-sync=display-resample
+# interpolation
+# tscale=oversample # smoothmotion
+#+end_src
+
+**** Audio
+~volume=60~ - volume level to start with
+
+#+begin_src conf
 af-add='dynaudnorm=g=5:f=250:r=0.9:p=0.5' # Normalizes audio
 af=scaletempo2
+#+end_src
 
-# ===== Color Space =====
+**** Color Space
+#+begin_src conf
 target-trc=auto
 gamma-auto
 vf=format=colorlevels=full:colormatrix=auto
 video-output-levels=full
+#+end_src
 
-# ===== Dithering =====
+**** Dithering 
+#+begin_src conf
 dither-depth=auto
 temporal-dither=yes
 dither=fruit
+#+end_src
 
-# ===== Debanding =====
+**** Debanding 
+#+begin_src conf
 deband=yes          # enabled by default
 deband-iterations=4 # deband steps
 deband-threshold=48 # deband strength
 deband-range=16     # deband range
 deband-grain=48     # dynamic grain: set to "0" if using the static grain shader
+#+end_src
 
-# ===== Subtitles =====
+**** Subtitles 
+#+begin_src conf
 blend-subtitles=yes
 sub-auto=fuzzy # Enable fuzzy searching:
+#+end_src
 
-# === My customs ===
+**** My customs
+#+begin_src conf
 no-input-builtin-bindings
 osd-font-size=45
 #+end_src
-*** Keybindings
+
+
+*** input.conf
 :PROPERTIES:
 :header-args: :tangle input.conf
 :END:
@@ -279,8 +307,6 @@ default key bindings.
 
 If this is enabled, treat all the following bindings as default:
 #+begin_src conf
-# DO NOT ALTER THIS FILE DIRECTLY, IT'S BEING TANGLED FROM README
-
 default-bindings start
 #+end_src
 
@@ -412,28 +438,33 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #ctrl+h cycle-values hwdec "auto" "no"  # toggle hardware decoding
 
 #d cycle deinterlace                    # toggle the deinterlacing filter
-**** TODO Known free
+** TODO Known free
 C, *
-** Inactive configuration settings
+** Inactive /mpv.conf/ settings
+Can fix stuttering in some cases, in other cases probably causes it. Try it if
+you experience stuttering:
+
+~opengl-early-flush=yes~
+
+*** Anti-Ringing
 #+begin_src conf
-# ===== Anti-Ringing =====
 # scale-antiring=0.7 # luma upscale deringing
 # dscale-antiring=0.7 # luma downscale deringing
 # cscale-antiring=0.7 # chroma upscale deringing
+#+end_src
 
+*** Profiles 
+#+begin_src conf
 # profile=svp
 
-# ===== Profiles =====
 # [svp]
 # input-ipc-server=/tmp/mpvsocket     # Receives input from SVP
 # hr-seek-framedrop=no                # Fixes audio desync
 # resume-playback=no                  # Not compatible with SVP
+#+end_src
 
-# Can fix stuttering in some cases, in other cases probably causes it. Try it if you experience stuttering.
-#opengl-early-flush=yes
-
-
-# ===== Upscaling & Processing =====
+*** Upscaling & Processing
+#+begin_src conf
 # glsl-shaders-clr # luma upscaling
 # note: any FSRCNNX above FSRCNNX_x2_8-0-4-1 is not worth the additional computional overhead
 # glsl-shaders="~/.config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl"
@@ -445,11 +476,10 @@ C, *
 # glsl-shaders-append="~/.config/mpv/shaders/KrigBilateral.glsl"
 # cscale=mitchell
 # sigmoid-upscaling=yes
+#+end_src
 
-
-
-# ===== Custom Profiles =====
-
+*** Custom Profiles
+#+begin_src conf
 [4k60] # 2160p @ 60fps (3840x2160 UHDTV)
 profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
 profile-desc=4k60
@@ -527,8 +557,10 @@ vf=bwdif # apply FFMPEG's bwdif deinterlacer
 
 [default]
 profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
+#+end_src
 
-# ===== File Type Profiles =====
+*** File Type Profiles
+#+begin_src conf
 # GIF Files
 [extension.gif]
 profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
@@ -542,9 +574,9 @@ profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
 profile-desc=webm
 no-pause
 loop-file=yes
-
-# ===== Protocol Specific Configuration =====
-
+#+end_src
+*** Protocol Specific Configuration
+#+begin_src conf
 [protocol.http]
 profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
 profile-desc=http
