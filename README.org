@@ -11,6 +11,36 @@ change qt config.py) dir (name it just ~umpv~)
 
 [[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
 
+** Contents :TOC_3:noexport:
+  - [[#compilation][Compilation]]
+  - [[#scripts-added-user-scripts][Scripts added #user-scripts]]
+    - [[#sponsorblock][sponsorblock]]
+    - [[#dbvol-docs][dbvol #docs]]
+    - [[#wait-intersubs-docs][WAIT interSubs #docs]]
+    - [[#mpv-lastfm-docs][mpv-lastfm #docs]]
+    - [[#blur-edges-docs][blur-edges #docs]]
+    - [[#idea-subtitles][IDEA subtitles]]
+    - [[#quack-docs][quack #docs]]
+    - [[#reload-docs][reload #docs]]
+    - [[#mpv-webtorrent-hook][mpv-webtorrent-hook]]
+    - [[#youtube-search-source][youtube-search #source]]
+    - [[#smartcopypaste-ii-simplehistory-and-undoredo][smartcopypaste II, simplehistory and undoredo]]
+    - [[#youtube-quality-docs][youtube-quality #docs]]
+    - [[#youtube-upnext-docs][youtube-upnext #docs]]
+    - [[#ytdlautoformat-docs][ytdlautoformat #docs]]
+    - [[#mpv-gallery-view][mpv-gallery-view]]
+    - [[#scripts-to-keep-in-mind][Scripts to keep in mind]]
+  - [[#shaders-added-user-shaders][Shaders added #user-shaders]]
+    - [[#anime4k][Anime4K]]
+  - [[#configuration][Configuration]]
+    - [[#mpvconf][mpv.conf]]
+    - [[#inputconf][input.conf]]
+  - [[#to-do-list-04][To do list]]
+    - [[#viewtube-for-my-main-pc][viewtube for my main pc?]]
+    - [[#hold-mpv-as-a-music-player][HOLD mpv as a music player]]
+    - [[#idea-copy-paste-url][IDEA copy-paste-url]]
+    - [[#idea-anime][IDEA Anime]]
+
 ** Compilation
 Install mujs (for js), i ain't usin any js scripts, but just in case,
 vapoursynth (for python) and luajit (for lua just in time compilation) so the
@@ -591,7 +621,7 @@ Alt+L cycle-values loop-file "inf" "no"    # toggle infinite looping
 #d cycle deinterlace                    # toggle the deinterlacing filter
 #+end_src
 
-** Todo [0/4]
+** To do list [0/4]
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
