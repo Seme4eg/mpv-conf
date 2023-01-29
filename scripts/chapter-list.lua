@@ -1,1 +1,1 @@
-/home/sad/git/mpv-scripts/chapter-list.lua
+../myscripts/chapter-list.lua

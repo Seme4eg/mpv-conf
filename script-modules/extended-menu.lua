@@ -1,1 +1,1 @@
-/home/sad/git/mpv-scripts/script-modules/extended-menu.lua
+../myscripts/script-modules/extended-menu.lua

@@ -1,1 +1,1 @@
-/home/sad/git/mpv-scripts/leader.lua
+../myscripts/leader.lua
