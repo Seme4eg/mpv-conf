@@ -35,10 +35,13 @@
     - [[#idea-anime][IDEA Anime]]
 
 ** Compilation
-Install mujs (for js), i ain't usin any js scripts, but just in case,
-vapoursynth (for python) and luajit (for lua just in time compilation) so the
-meson script can see those deps and add needed build flags before building. Then
-proceed to [[https://github.com/mpv-player/mpv/#compilation][compilation]] section.
+*Dependencies*:
+- =mujs= - for js scripts (i ain't usin any js scripts for now)
+- =vapoursynth= - for python scripts
+- =luajit= - lua Just In Time compilation so the meson script can see those deps
+  and add needed build flags before building.
+
+Now proceed to [[https://github.com/mpv-player/mpv/#compilation][compilation]] section.
 
 ** Scripts added [[https://github.com/mpv-player/mpv/wiki/User-Scripts][#user-scripts]]
 *** [[file:scripts/sponsorblock.lua][sponsorblock]]
