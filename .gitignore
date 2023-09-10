@@ -1,5 +1,3 @@
 /*.log
-/watch_later/
 /shaders/
-/input.conf
-/mpv.conf
+/*.conf
