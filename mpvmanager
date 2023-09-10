@@ -2,6 +2,7 @@
 #
 # REVIEW: maybe make downloading syncronous ?
 # TODO: compare .conf files and show diffs, asking which to apply if any changes
+# TODO: make commands: help, getall, getnew (no default, require being explicit)
 
 # 1st arg - user script name
 # 2nd arg - type of file: script / module / options
@@ -15,11 +16,11 @@ get() {
 
   if [ $2 == options ]; then
     # if conf files exist don't overrite them, but get them on fresh install
-    wget -q --no-clobber -P $prefix $3
-  else
-    # N to enable timestamping (for file overwrite)
-    wget -qN -P $prefix $3
+    config_exists "$1" && return
   fi
+
+  # N to enable timestamping (for file overwrite)
+  wget -qN -P $prefix $3
 
   wget_exit_status=$?
 
@@ -31,7 +32,6 @@ get() {
 
 }
 
-# TODO: remove if won't be much use
 config_exists() {
   test -e "./script-opts/$1.conf"
 }
@@ -39,9 +39,9 @@ config_exists() {
 # dbvol
 get dbvol script https://gist.githubusercontent.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff/raw/c841063304a98f99371ce28e0b14ade609e8185c/dbvol.lua
 
-# blur-edges
-get blur-edges script https://raw.githubusercontent.com/occivink/mpv-scripts/master/scripts/blur-edges.lua
-get blur-edges options https://raw.githubusercontent.com/occivink/mpv-scripts/master/script-opts/blur_edges.conf
+# blur_edges
+get blur_edges script https://raw.githubusercontent.com/occivink/mpv-scripts/master/scripts/blur-edges.lua
+get blur_edges options https://raw.githubusercontent.com/occivink/mpv-scripts/master/script-opts/blur_edges.conf
 
 # quack
 get quack script https://raw.githubusercontent.com/CounterPillow/mpv-quack/master/quack.lua
@@ -62,10 +62,10 @@ get thumbfast options https://raw.githubusercontent.com/l-jared/thumbfast/master
 get undoredo script https://raw.githubusercontent.com/Eisa01/mpv-scripts/master/scripts/UndoRedo.lua
 
 # uosc
-config_dir="${XDG_CONFIG_HOME:-~/.config}"
-mkdir -pv "$config_dir"/mpv/script-opts/
-rm -rf "$config_dir"/mpv/scripts/uosc_shared
-wget -P /tmp/ https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip
-unzip -od "$config_dir"/mpv/ /tmp/uosc.zip
-rm -fv /tmp/uosc.zip
-get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
+# config_dir="${XDG_CONFIG_HOME:-~/.config}"
+# mkdir -pv "$config_dir"/mpv/script-opts/
+# rm -rf "$config_dir"/mpv/scripts/uosc_shared
+# wget -P /tmp/ https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip
+# unzip -od "$config_dir"/mpv/ /tmp/uosc.zip
+# rm -fv /tmp/uosc.zip
+# get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
