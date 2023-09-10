@@ -4,24 +4,18 @@
 [[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i deem to b a *must-read*)
 
 ** Contents :TOC_3:noexport:
-  - [[#compilation][Compilation]]
+  - [[#installation][Installation]]
   - [[#scripts-added-user-scripts][Scripts added #user-scripts]]
-    - [[#sponsorblock][sponsorblock]]
     - [[#dbvol-docs][dbvol #docs]]
     - [[#wait-intersubs-docs][WAIT interSubs #docs]]
-    - [[#mpv-lastfm-docs][mpv-lastfm #docs]]
     - [[#blur-edges-docs][blur-edges #docs]]
     - [[#idea-subtitles][IDEA subtitles]]
     - [[#quack-docs][quack #docs]]
     - [[#reload-docs][reload #docs]]
     - [[#mpv-webtorrent-hook][mpv-webtorrent-hook]]
-    - [[#youtube-search-source][youtube-search #source]]
-    - [[#smartcopypaste-ii-simplehistory-and-undoredo][smartcopypaste II, simplehistory and undoredo]]
-    - [[#youtube-quality-docs][youtube-quality #docs]]
-    - [[#youtube-upnext-docs][youtube-upnext #docs]]
-    - [[#ytdlautoformat-docs][ytdlautoformat #docs]]
-    - [[#mpv-gallery-view][mpv-gallery-view]]
-    - [[#scripts-to-keep-in-mind][Scripts to keep in mind]]
+    - [[#mpv-search-page][mpv-search-page]]
+    - [[#undoredo][undoredo]]
+    - [[#recents][recents]]
   - [[#shaders-added-user-shaders][Shaders added #user-shaders]]
     - [[#anime4k][Anime4K]]
   - [[#configuration][Configuration]]
@@ -29,40 +23,20 @@
     - [[#inputconf][input.conf]]
   - [[#to-do-list-05][To do list]]
     - [[#viewtube-for-my-main-pc][viewtube for my main pc?]]
-    - [[#mpvnet-for-windows-][mpv.net for windows ?]]
     - [[#hold-mpv-as-a-music-player][HOLD mpv as a music player]]
     - [[#idea-copy-paste-url][IDEA copy-paste-url]]
     - [[#idea-anime][IDEA Anime]]
 
-** Compilation
-*Dependencies*:
-- =mujs= - for js scripts (i ain't usin any js scripts for now)
-- =vapoursynth= - for python scripts
-- =luajit= - lua Just In Time compilation so the meson script can see those deps
-  and add needed build flags before building.
-
-Now proceed to [[https://github.com/mpv-player/mpv/#compilation][compilation]] section.
+** Installation
+*Deps*: libsixel, lua52, sndio
 
 ** Scripts added [[https://github.com/mpv-player/mpv/wiki/User-Scripts][#user-scripts]]
-*** [[file:scripts/sponsorblock.lua][sponsorblock]]
-A fully-featured port of [SponsorBlock](https://github.com/ajayyy/SponsorBlock) for mpv.
-
-*NOTE*: i've set ~local_database = false~ in script file ([[https://github.com/po5/mpv_sponsorblock/issues/50][gh-issue]])
-
-#+begin_src lua
-mp.add_key_binding("Alt+6", "set_segment", set_segment)
-mp.add_key_binding("Alt+7", "submit_segment", submit_segment)
-mp.add_key_binding("Alt+u", "upvote_segment", function() return vote("1") end)
-mp.add_key_binding("Alt+d", "downvote_segment", function() return vote("0") end)
-#+end_src
-
 *** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
 volume control using decibels, ~j/k~
 
 *** WAIT [[file:scripts/interSubs.lua][interSubs]] [[https://github.com/oltodosel/interSubs][#docs]]
 - default keybinding to start/stop: F5
 - default keybinding to hide/show: F6
-*** TODO mpv-lastfm [[https://github.com/l29ah/w3crapcli/blob/master/last.fm/mpv-lastfm.lua][#docs]]
 *** TODO [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
 kbd at the bottom of the script
 
@@ -87,126 +61,18 @@ temporarily reduce the volume after a seek
 ~ctrl+r~ to reload if anything is wrong / stuck
 *** [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
 several deps, view installation section in docs
-*** [[file:scripts/youtube-search.lua][youtube-search]] [[https://github.com/CogentRedTester/mpv-scripts/raw/master/youtube-search.lua][#source]]
-Read script top comment for installation & keybindings (yt api key i've created)
-
-- mp.add_key_binding(nil, "yt", open_search_input)
-- mp.add_key_binding("/", "youtube-search", function()
-
-\+ j/k and C-[
-
-*** [[https://github.com/Eisa01/mpv-scripts#smartcopypaste_ii][smartcopypaste II]], [[https://github.com/Eisa01/mpv-scripts#simplehistory][simplehistory]] and [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
-**** *smartcopypaste ii* default keybinds:
-- C-c :: copy vid url
-- C-v :: paste vid url
-- C-C :: copy vid url with timestamp
-- C-V :: paste as a playlist
-- M-c :: open copypaste list with filters (a[ll], r[ecents], f[ileonly],
-  d[istinct], k[eywords], more 'bout filters again in =conf= file)
-
-Keybindings that will be used to navigate up on the list:
-
-k/j, C-b/f, g[g]/G, C-[, / as in vim
-
-#+begin_src conf
-#--Keybind that will be used to load highlighted entry from the list
-list_select_keybind=["ENTER"]
-#--Keybind that will be used to add the selected entry to playlist
-list_add_playlist_keybind=["SHIFT+ENTER"]
-#--Keybind that will be used to close the list (closes search first if it is open)
-list_close_keybind=["ESC", "q", "ctrl+["]
-#--Keybind that will be used to delete the highlighted entry from the list
-list_delete_keybind=["DEL"]
-#--Keybind that will be used to exit typing mode of search while keeping search open
-list_search_not_typing_mode_keybind=["CTRL+ENTER"]
-#--Keybind thats are ignored when list is open
-list_ignored_keybind=["h", "H", "r", "R", "b", "B", "k", "K"]
-#+end_src
-
-**** *simplehistory* Default Keybinds:
-- Ctrl+r resume in any previously closed videos / idle: loads and resumes last
-  played video
-- Alt+r add last closed video into playlist / idle: loads last closed video
-  without resuming
-- h opens History list (Log Manager)
-- r opens History list - filtered with recent items (Log Manager)
-
-#+begin_src conf
-history_resume_keybind=["Alt+>"]
-history_load_last_keybind=["alt+<"]
-open_list_keybind=[ ["Alt+h"] ]
-list_filter_jump_keybind=[ ["a", "all"], ["r", "recents"], ["d", "distinct"], ["f", "fileonly"] ]
-history_incognito_mode_keybind=["Alt+H"]
-next_filter_sequence_keybind=["l"]
-previous_filter_sequence_keybind=["h"]
-list_cycle_sort_keybind=["o"]
-#+end_src
-
-*Vim*: hjkl, C-b/f, g/G, /
-
-#+begin_src conf
-list_highlight_move_keybind=["SHIFT"]
-list_highlight_all_keybind=["h"]
-list_unhighlight_all_keybind=["H"]
-#--Keybind that will be used to add entry to playlist based on cursor position
-list_add_playlist_keybind=["CTRL+ENTER"]
-#--Keybind that will be used to add all highlighted entries to playlist
-list_add_playlist_highlighted_keybind=["SHIFT+ENTER"]
-list_close_keybind=["ESC", "q", "Ctrl+["]
-list_delete_keybind=["d"]
-list_delete_highlighted_keybind=["D"]
-#--Keybind that will be used to exit typing mode of search while keeping search open
-list_search_not_typing_mode_keybind=["ALT+ENTER"]
-#--Keybind thats are ignored when list is open
-list_ignored_keybind=["B", "b", "K", "c", "C"]
-#+end_src
-
-**** *undoredo* Default Keybinds
+*** [[https://github.com/CogentRedTester/mpv-search-page][mpv-search-page]]
+*** [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
 - mp.add_key_binding("u", "undo", undo)
 - mp.add_key_binding("r", "redo", redo)
 - mp.add_key_binding("U", "undoLoop", undoLoop)
 
-*** [[file:scripts/youtube-quality.lua][youtube-quality]] [[https://github.com/jgreco/mpv-youtube-quality][#docs]]
-Change youtube video quality on the fly.
+*** TODO recents
+take any script that SIMPLY logs history and pipe it to my extended-menu script
 
-toggle_menu_binding=alt+q
+Example of line format in history.log file (see how it forms [[https://github.com/Eisa01/mpv-scripts#simplehistory][here]]):
+: [Wednesday/September 06/09/2023 19:17:52] "output.lq.mp4" | https://dl4.vibio.tv/f064277c672d45c35a49426dca2020f7/2839/2839278/output.lq.mp4 | length=5367.4472335601 | time=5367.4100453432
 
-k,j
-
-*** [[file:scripts/youtube-upnext.lua][youtube-upnext]] [[https://github.com/cvzi/mpv-youtube-upnext][#docs]]
-Fetch upnext/recommended videos from youtube
-
-toggle_menu_binding=alt+.
-
-k,j
-
-*** [[file:scripts/ytdlautoformat.lua][ytdlautoformat]] [[https://github.com/Samillion/mpv-ytdlautoformat][#docs]]
-A simple mpv script to automatically change ytdl-format (for yt-dlp, youtube-dl)
-specifically if the URL is Youtube or Twitch.
-
-/Changd lines:/
-#+begin_src lua
-local changedQuality = 1080
-local enableVP9 = true
-local FPSLimit = 60
-#+end_src
-
-*** [[https://github.com/occivink/mpv-gallery-view/][mpv-gallery-view]]
-*Playlist-view*:
-- ~G~ to toggle gallery view
-- hjkl, C-b/f, g/G, C-[, D[elete]
-- TAB - flag
-
-*Contact-sheet*:
-- ~C~ to toggle contact view (changed not in .conf tho, there is no option)
-- mouse_support=no
-- hjkl, C-b/f, g/G, C-[
-
-*** Scripts to keep in mind
-**** [[https://github.com/cvzi/mpv-youtube-download][mpv-youtube-download]]
-**** [[https://gist.github.com/bitingsock/17d90e3deeb35b5f75e55adb19098f58][ytdl-preload]]
-**** [[https://github.com/Guldoman/mpv_inhibit_gnome][inhibit_gnome]]
-prevents screen blanking in GNOME while playing media.
 ** Shaders added [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]]
 *** [[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]]
 
@@ -222,6 +88,7 @@ External Sources of this config:
 - https://raw.githubusercontent.com/classicjazz/mpv-config/master/mpv.conf
 
 #+begin_src conf
+# DO NOT ALTER! This config is tangled from README
 vo=gpu         # Uses GPU-accelerated video output by default.
 profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
 scale=ewa_lanczossharp
@@ -301,6 +168,16 @@ sub-auto=fuzzy # Enable fuzzy searching:
 #+begin_src conf
 no-input-builtin-bindings
 osd-font-size=45
+#+end_src
+**** Custom profiles ( must be last )
+#+begin_src conf
+[fastforward]
+profile-restore=copy-equal
+# scale=bilinear
+# dscale=bilinear
+# cscale=bilinear
+vd-lavc-skiploopfilter=all
+vd-lavc-skipframe=all
 #+end_src
 
 **** Inactive /mpv.conf/ settings
@@ -503,6 +380,8 @@ my leader script.
 # Seek units are in seconds, but note that these are limited by keyframes
 l seek  5                          # seek 5 seconds forward
 h seek -5                          # seek 5 seconds backward
+RIGHT seek  5                          # seek 5 seconds forward
+LEFT  seek -5                          # seek 5 seconds backward
 # Do smaller, always exact (non-keyframe-limited), seeks with shift.
 # Don't show them on the OSD (no-osd).
 L no-osd seek  10 exact       # seek exactly 10 seconds forward
@@ -562,7 +441,7 @@ ESC set fullscreen no                  # leave fullscreen
 ESC {encode} quit 4
 
 ? show-progress                        # show playback progress
-# toggle displaying information and statistics
+# toggle displaying information and statistics (https://mpv.io/manual/master/#stats)
 i script-binding stats/display-stats-toggle 
 ` script-binding console/enable        # open the console
 Ctrl+F cycle fullscreen                     # toggle fullscreen
@@ -589,7 +468,6 @@ Ctrl+S screenshot video
 
 ** To do list [0/5]
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
-*** TODO [[https://github.com/stax76/mpv.net][mpv.net]] for windows ?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
 scripts/ which might b sometime useful again for my main pc
