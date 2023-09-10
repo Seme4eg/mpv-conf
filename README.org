@@ -7,21 +7,23 @@
   - [[#installation][Installation]]
   - [[#scripts-added-user-scripts][Scripts added #user-scripts]]
     - [[#dbvol-docs][dbvol #docs]]
-    - [[#wait-intersubs-docs][WAIT interSubs #docs]]
     - [[#blur-edges-docs][blur-edges #docs]]
     - [[#idea-subtitles][IDEA subtitles]]
     - [[#quack-docs][quack #docs]]
     - [[#reload-docs][reload #docs]]
     - [[#mpv-webtorrent-hook][mpv-webtorrent-hook]]
-    - [[#mpv-search-page][mpv-search-page]]
     - [[#undoredo][undoredo]]
+    - [[#uosc][uosc]]
+    - [[#thumbfast][thumbfast]]
     - [[#recents][recents]]
   - [[#shaders-added-user-shaders][Shaders added #user-shaders]]
     - [[#anime4k][Anime4K]]
   - [[#configuration][Configuration]]
     - [[#mpvconf][mpv.conf]]
     - [[#inputconf][input.conf]]
-  - [[#to-do-list-05][To do list]]
+  - [[#to-do-list-08][To do list]]
+    - [[#migrate-from-extended-menu-to-external-rofi][migrate from 'extended-menu' to external rofi]]
+    - [[#plugin-bindings-04][plugin bindings]]
     - [[#viewtube-for-my-main-pc][viewtube for my main pc?]]
     - [[#hold-mpv-as-a-music-player][HOLD mpv as a music player]]
     - [[#idea-copy-paste-url][IDEA copy-paste-url]]
@@ -34,9 +36,6 @@
 *** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
 volume control using decibels, ~j/k~
 
-*** WAIT [[file:scripts/interSubs.lua][interSubs]] [[https://github.com/oltodosel/interSubs][#docs]]
-- default keybinding to start/stop: F5
-- default keybinding to hide/show: F6
 *** TODO [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
 kbd at the bottom of the script
 
@@ -59,13 +58,19 @@ and [[https://github.com/Ben-Kerman/immersive][immersive]] also for learning
 temporarily reduce the volume after a seek
 *** [[file:scripts/reload.lua][reload]] [[https://github.com/4e6/mpv-reload][#docs]]
 ~ctrl+r~ to reload if anything is wrong / stuck
-*** [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
+*** TODO [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
 several deps, view installation section in docs
-*** [[https://github.com/CogentRedTester/mpv-search-page][mpv-search-page]]
 *** [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
 - mp.add_key_binding("u", "undo", undo)
 - mp.add_key_binding("r", "redo", redo)
 - mp.add_key_binding("U", "undoLoop", undoLoop)
+*** [[https://github.com/tomasklaen/uosc][uosc]]
+Feature-rich minimalist proximity-based UI for MPV player.
+
+_Install / update_ with [[file:update-uosc]] script, then if its a fresh installation
+[[https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf][copy]] uosc.conf to opts dir.
+*** [[https://github.com/l-jared/thumbfast][thumbfast]]
+High-performance on-the-fly thumbnailer for mpv.
 
 *** TODO recents
 take any script that SIMPLY logs history and pipe it to my extended-menu script
@@ -98,11 +103,6 @@ border=no              # hides the window title bar
 
 # term-osd-bar=yes     # displays a progress bar on the terminal
 cursor-autohide=2000 # autohides the cursor after 1s
-
-# Sets a custom font
-osd-font='Iosevka'
-# osd-font-size=45
-osd-scale=0.5
 
 save-position-on-quit=yes
 
@@ -162,6 +162,23 @@ deband-grain=48     # dynamic grain: set to "0" if using the static grain shader
 #+begin_src conf
 blend-subtitles=yes
 sub-auto=fuzzy # Enable fuzzy searching:
+#+end_src
+**** Plugins
+***** UOSC
+#+begin_src conf
+# required so that the 2 UIs don't fight each other
+osc=no
+# uosc provides its own seeking/volume indicators, so you also don't need this
+osd-bar=no
+# uosc will draw its own window controls if you disable window border
+border=no
+
+# uosc respects this setting
+# osd-font='Iosevka'
+
+# And these doesn't
+# osd-font-size=45
+# osd-scale=0.5
 #+end_src
 
 **** My customs
@@ -394,8 +411,8 @@ Ctrl+0 set video-zoom 0 ; set video-pan-x 0 ; set video-pan-y 0
 
 [ multiply speed 1/1.1 # decrease the playback speed
 ] multiply speed 1.1   # increase the playback speed
-> multiply speed 0.5   # halve the playback speed
-< multiply speed 2.0   # double the playback speed
+> multiply speed 2.0   # double the playback speed
+< multiply speed 0.5   # halve the playback speed
 0 set speed 1.0        # reset the speed to normal
 
 SPACE cycle pause       # toggle pause/playback mode
@@ -454,19 +471,37 @@ Alt+Ctrl+v cycle-values video-aspect-override "16:9" "4:3" "2.35:1" "-1"
 Ctrl+S screenshot video
 #+end_src
 
-**** Unknown purpose
-#+begin_src conf :tangle no
-#w add panscan -0.1                     # decrease panscan
-#W add panscan +0.1                     # shrink black bars by cropping the video
-#e add panscan +0.1                     # shrink black bars by cropping the video
+** To do list [0/8]
+*** TODO migrate from 'extended-menu' to external rofi
+don't write a bicycle
+*** TODO plugin bindings [0/4]
+**** TODO dbvol kbds set somewhere
+-mp.add_key_binding("j", "decrease-db", decrease_db, { repeatable = true })
+-mp.add_key_binding("k", "increase-db", increase_db, { repeatable = true })
+**** TODO toggle-blur command binding
+-mp.add_key_binding("Alt+b", "toggle-blur", toggle)
+**** TODO reload
+mp.add_key_binding("Ctrl+r", "reload", reload)
 
-#E cycle edition                        # switch edition
-#ctrl+h cycle-values hwdec "auto" "no"  # toggle hardware decoding
+OR
 
-#d cycle deinterlace                    # toggle the deinterlacing filter
-#+end_src
+KEYBIND script-binding reload/reload
+**** TODO undoredo
+-mp.add_key_binding("u", "undo", undo)
+--- mp.add_key_binding("ctrl+Z", "undoCaps", undo)
++mp.add_key_binding("ctrl+z", "undo", undo)
++mp.add_key_binding("ctrl+Z", "undoCaps", undo)
 
-** To do list [0/5]
+-mp.add_key_binding("r", "redo", redo)
+--- mp.add_key_binding("ctrl+Y", "redoCaps", redo)
++mp.add_key_binding("ctrl+y", "redo", redo)
++mp.add_key_binding("ctrl+Y", "redoCaps", redo)
+
+-mp.add_key_binding("U", "undoLoop", undoLoop)
+--- mp.add_key_binding("ctrl+alt+Z", "undoLoopCaps", undoLoop)
++mp.add_key_binding("ctrl+alt+z", "undoLoop", undoLoop)
++mp.add_key_binding("ctrl+alt+Z", "undoLoopCaps", undoLoop)
+
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
