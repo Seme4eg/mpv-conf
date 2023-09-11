@@ -36,36 +36,4 @@ config_exists() {
   test -e "./script-opts/$1.conf"
 }
 
-# dbvol
-get dbvol script https://gist.githubusercontent.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff/raw/c841063304a98f99371ce28e0b14ade609e8185c/dbvol.lua
-
-# blur_edges
-get blur_edges script https://raw.githubusercontent.com/occivink/mpv-scripts/master/scripts/blur-edges.lua
-get blur_edges options https://raw.githubusercontent.com/occivink/mpv-scripts/master/script-opts/blur_edges.conf
-
-# quack
-get quack script https://raw.githubusercontent.com/CounterPillow/mpv-quack/master/quack.lua
-conf_file=quack.conf
-! config_exists quack && echo "ducksecs=1" >"$conf_file"
-
-# reload
-get reload script https://raw.githubusercontent.com/sibwaf/mpv-scripts/master/reload.lua
-
-# lilskippa
-get lilskippa script https://raw.githubusercontent.com/AN3223/dotfiles/master/.config/mpv/scripts/lilskippa.lua
-
-# thumbfast
-get thumbfast script https://raw.githubusercontent.com/l-jared/thumbfast/master/thumbfast.lua
-get thumbfast options https://raw.githubusercontent.com/l-jared/thumbfast/master/thumbfast.conf
-
-# undoredo
-get undoredo script https://raw.githubusercontent.com/Eisa01/mpv-scripts/master/scripts/UndoRedo.lua
-
-# uosc
-# config_dir="${XDG_CONFIG_HOME:-~/.config}"
-# mkdir -pv "$config_dir"/mpv/script-opts/
-# rm -rf "$config_dir"/mpv/scripts/uosc_shared
-# wget -P /tmp/ https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip
-# unzip -od "$config_dir"/mpv/ /tmp/uosc.zip
-# rm -fv /tmp/uosc.zip
-# get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
+. sources

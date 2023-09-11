@@ -1,85 +1,9 @@
 #+TITLE:MPV
 #+STARTUP: nohideblocks
 
-[[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i deem to b a *must-read*)
+[[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i deem to b a _must-read_)
 
-** Contents :TOC_3:noexport:
-  - [[#installation][Installation]]
-  - [[#scripts-added-user-scripts][Scripts added #user-scripts]]
-    - [[#dbvol-docs][dbvol #docs]]
-    - [[#blur-edges-docs][blur-edges #docs]]
-    - [[#idea-subtitles][IDEA subtitles]]
-    - [[#quack-docs][quack #docs]]
-    - [[#reload-docs][reload #docs]]
-    - [[#mpv-webtorrent-hook][mpv-webtorrent-hook]]
-    - [[#undoredo][undoredo]]
-    - [[#uosc][uosc]]
-    - [[#thumbfast][thumbfast]]
-    - [[#recents][recents]]
-  - [[#shaders-added-user-shaders][Shaders added #user-shaders]]
-    - [[#anime4k][Anime4K]]
-  - [[#configuration][Configuration]]
-    - [[#mpvconf][mpv.conf]]
-    - [[#inputconf][input.conf]]
-  - [[#to-do-list-08][To do list]]
-    - [[#migrate-from-extended-menu-to-external-rofi][migrate from 'extended-menu' to external rofi]]
-    - [[#plugin-bindings-04][plugin bindings]]
-    - [[#viewtube-for-my-main-pc][viewtube for my main pc?]]
-    - [[#hold-mpv-as-a-music-player][HOLD mpv as a music player]]
-    - [[#idea-copy-paste-url][IDEA copy-paste-url]]
-    - [[#idea-anime][IDEA Anime]]
-
-** Installation
-*Deps*: libsixel, lua52, sndio
-
-** Scripts added [[https://github.com/mpv-player/mpv/wiki/User-Scripts][#user-scripts]]
-*** [[file:scripts/dbvol.lua][dbvol]] [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][#docs]]
-volume control using decibels, ~j/k~
-
-*** TODO [[file:scripts/blur-edges.lua][blur-edges]] [[https://github.com/occivink/mpv-scripts#blur-edgeslua][#docs]]
-kbd at the bottom of the script
-
-*NOTE* slows everything down *a lot* + triggers only on fullscreen toggle
-
-*** IDEA subtitles
-either [[https://github.com/directorscut82/find_subtitles][this]] or [[https://github.com/davidde/mpv-autosub][this]]. Former - press to download, latter - automatic
-also search on scripts page for 'sub-', there are lots of utility scripts for
-working with subtitles
-
-and yet another [[https://github.com/wiiaboo/mpv-scripts/blob/master/subit.lua][script]] for subtitles
-
-**** IDEA when learning jap
-[[https://github.com/linguisticmind/mpv-scripts/tree/master/copy-subtitle][copy-subtitle]]
-and [[https://github.com/liberlanco/mpv-lang-learner][lang-learner]] as a must
-and [[https://github.com/Ben-Kerman/immersive][immersive]] also for learning
-[[https://github.com/fxmarty/rikai-mpv][rikay-mpv]] - special for jap
-[[https://github.com/laelnasan/yomichampv][yomichampv]]
-*** [[file:scripts/quack.lua][quack]] [[https://github.com/CounterPillow/mpv-quack][#docs]]
-temporarily reduce the volume after a seek
-*** [[file:scripts/reload.lua][reload]] [[https://github.com/4e6/mpv-reload][#docs]]
-~ctrl+r~ to reload if anything is wrong / stuck
-*** TODO [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
-several deps, view installation section in docs
-*** [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
-- mp.add_key_binding("u", "undo", undo)
-- mp.add_key_binding("r", "redo", redo)
-- mp.add_key_binding("U", "undoLoop", undoLoop)
-*** [[https://github.com/tomasklaen/uosc][uosc]]
-Feature-rich minimalist proximity-based UI for MPV player.
-
-_Install / update_ with [[file:update-uosc]] script, then if its a fresh installation
-[[https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf][copy]] uosc.conf to opts dir.
-*** [[https://github.com/l-jared/thumbfast][thumbfast]]
-High-performance on-the-fly thumbnailer for mpv.
-
-*** TODO recents
-take any script that SIMPLY logs history and pipe it to my extended-menu script
-
-Example of line format in history.log file (see how it forms [[https://github.com/Eisa01/mpv-scripts#simplehistory][here]]):
-: [Wednesday/September 06/09/2023 19:17:52] "output.lq.mp4" | https://dl4.vibio.tv/f064277c672d45c35a49426dca2020f7/2839/2839278/output.lq.mp4 | length=5367.4472335601 | time=5367.4100453432
-
-** Shaders added [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]]
-*** [[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]]
+*Dependencies*: libsixel, lua52, sndio
 
 ** Configuration
 *** mpv.conf
@@ -163,7 +87,7 @@ deband-grain=48     # dynamic grain: set to "0" if using the static grain shader
 blend-subtitles=yes
 sub-auto=fuzzy # Enable fuzzy searching:
 #+end_src
-**** Plugins
+**** User scripts
 ***** UOSC
 #+begin_src conf
 # required so that the 2 UIs don't fight each other
@@ -436,18 +360,6 @@ k add volume 2
 m cycle mute                           # toggle mute
 #+end_src
 
-**** Shaders
-#+NAME: Anime4K
-#+begin_src conf
-CTRL+1 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode A (Fast)"
-CTRL+2 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_Soft_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode B (Fast)"
-CTRL+3 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Upscale_Denoise_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode C (Fast)"
-CTRL+4 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_Restore_CNN_S.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode A+A (Fast)"
-CTRL+5 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Restore_CNN_Soft_M.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Restore_CNN_Soft_S.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode B+B (Fast)"
-CTRL+6 no-osd change-list glsl-shaders set "~~/shaders/Anime4K_Clamp_Highlights.glsl:~~/shaders/Anime4K_Upscale_Denoise_CNN_x2_M.glsl:~~/shaders/Anime4K_AutoDownscalePre_x2.glsl:~~/shaders/Anime4K_AutoDownscalePre_x4.glsl:~~/shaders/Anime4K_Restore_CNN_S.glsl:~~/shaders/Anime4K_Upscale_CNN_x2_S.glsl"; show-text "Anime4K: Mode C+A (Fast)"
-CTRL+0 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
-#+end_src
-
 **** Misc
 #+begin_src conf
 # Quitting
@@ -471,41 +383,124 @@ Alt+Ctrl+v cycle-values video-aspect-override "16:9" "4:3" "2.35:1" "-1"
 Ctrl+S screenshot video
 #+end_src
 
+** [[https://github.com/stax76/awesome-mpv][User scripts]]
+*** [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][dbvol]] - volume control using decibels
+#+begin_src bash :tangle sources
+get dbvol script https://gist.githubusercontent.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff/raw/c841063304a98f99371ce28e0b14ade609e8185c/dbvol.lua
+#+end_src
+
+#+begin_src conf :tangle input.conf :comments noweb
+j script-binding dbvol/decrease-db
+k script-binding dbvol/increase-db
+#+end_src
+
+*** [[https://github.com/occivink/mpv-scripts#blur-edgeslua][blur-edges]]
+Fills the black bars on the side of a video with a blurred copy of its edges.
+
+*NOTE* slows everything down *a lot* + triggers only on fullscreen toggle
+
+#+begin_src bash :tangle sources
+get blur_edges script https://raw.githubusercontent.com/occivink/mpv-scripts/master/scripts/blur-edges.lua
+get blur_edges options https://raw.githubusercontent.com/occivink/mpv-scripts/master/script-opts/blur_edges.conf
+#+end_src
+
+#+begin_src conf :tangle input.conf :comments link
+Alt+b script-binding blur-edges/toggle-blur
+#+end_src
+
+*** [[https://github.com/CounterPillow/mpv-quack][quack]] temporarily reduce the volume after a seek
+#+begin_src bash :tangle sources
+get quack script https://raw.githubusercontent.com/CounterPillow/mpv-quack/master/quack.lua
+conf_file=quack.conf
+! config_exists quack && echo "ducksecs=1" >"$conf_file"
+#+end_src
+*** [[https://github.com/4e6/mpv-reload][reload]]
+~ctrl+r~ to reload if anything is wrong / stuck
+
+#+begin_src bash :tangle sources
+get reload script https://raw.githubusercontent.com/sibwaf/mpv-scripts/master/reload.lua
+#+end_src
+
+#+begin_src conf :tangle input.conf :comments link
+Ctrl+r script-binding reload/reload
+#+end_src
+
+*** [[https://github.com/Eisa01/mpv-scripts#undoredo][undoredo]]
+#+begin_src bash :tangle sources
+get undoredo script https://raw.githubusercontent.com/Eisa01/mpv-scripts/master/scripts/UndoRedo.lua
+#+end_src
+
+#+begin_src conf :tangle input.conf :comments link
+u script-binding UndoRedo/undo
+r script-binding UndoRedo/redo
+U script-binding UndoRedo/undoLoop
+#+end_src
+
+*** [[https://github.com/AN3223/dotfiles/blob/master/.config/mpv/scripts/lilskippa.lua][lilskippa]] fast forward to ..
+-- This script defines the following keybinds:
+--
+-- % skip2scene   -- skip2scene fast forwards to the next scene change
+-- ^ skip2black   -- skip2black fast forwards to the next black video segment
+-- & skip2silence -- skip2silence fast forwards to the next silent audio segment
+
+#+begin_src bash :tangle sources
+get lilskippa script https://raw.githubusercontent.com/AN3223/dotfiles/master/.config/mpv/scripts/lilskippa.lua
+#+end_src
+
+#+begin_src conf :tangle input.conf :comments link
+
+#+end_src
+
+*** [[https://github.com/l-jared/thumbfast][thumbfast]] High-performance on-the-fly thumbnailer for mpv.
+#+begin_src bash :tangle sources
+get thumbfast script https://raw.githubusercontent.com/l-jared/thumbfast/master/thumbfast.lua
+get thumbfast options https://raw.githubusercontent.com/l-jared/thumbfast/master/thumbfast.conf
+#+end_src
+
+*** [[https://github.com/tomasklaen/uosc][uosc]] Feature-rich minimalist proximity-based UI for MPV player.
+#+begin_src bash :tangle sources
+config_dir="${XDG_CONFIG_HOME:-~/.config}"
+mkdir -pv "$config_dir"/mpv/script-opts/
+rm -rf "$config_dir"/mpv/scripts/uosc_shared
+wget -P /tmp/ https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip
+unzip -od "$config_dir"/mpv/ /tmp/uosc.zip
+rm -fv /tmp/uosc.zip
+get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
+#+end_src
+
+** Other stuff
+- [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]] ([[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]])
+
 ** To do list [0/8]
-*** TODO migrate from 'extended-menu' to external rofi
-don't write a bicycle
-*** TODO plugin bindings [0/4]
-**** TODO dbvol kbds set somewhere
--mp.add_key_binding("j", "decrease-db", decrease_db, { repeatable = true })
--mp.add_key_binding("k", "increase-db", increase_db, { repeatable = true })
-**** TODO toggle-blur command binding
--mp.add_key_binding("Alt+b", "toggle-blur", toggle)
-**** TODO reload
-mp.add_key_binding("Ctrl+r", "reload", reload)
+*** TODO [#B] migrate from 'extended-menu' to external rofi
+use [[https://codeberg.org/NRK/mpv-toolbox/src/branch/master/mdmenu/mdmenu.lua][mdmenu]] and [[https://git.smrk.net/mpv-scripts/file/history.lua.html][history.lua]] scripts as examples
 
-OR
+*** TODO recents
+take any script that SIMPLY logs history and pipe it to my extended-menu script
 
-KEYBIND script-binding reload/reload
-**** TODO undoredo
--mp.add_key_binding("u", "undo", undo)
---- mp.add_key_binding("ctrl+Z", "undoCaps", undo)
-+mp.add_key_binding("ctrl+z", "undo", undo)
-+mp.add_key_binding("ctrl+Z", "undoCaps", undo)
-
--mp.add_key_binding("r", "redo", redo)
---- mp.add_key_binding("ctrl+Y", "redoCaps", redo)
-+mp.add_key_binding("ctrl+y", "redo", redo)
-+mp.add_key_binding("ctrl+Y", "redoCaps", redo)
-
--mp.add_key_binding("U", "undoLoop", undoLoop)
---- mp.add_key_binding("ctrl+alt+Z", "undoLoopCaps", undoLoop)
-+mp.add_key_binding("ctrl+alt+z", "undoLoop", undoLoop)
-+mp.add_key_binding("ctrl+alt+Z", "undoLoopCaps", undoLoop)
+Example of line format in history.log file (see how it forms [[https://github.com/Eisa01/mpv-scripts#simplehistory][here]]):
+: [Wednesday/September 06/09/2023 19:17:52] "output.lq.mp4" | https://dl4.vibio.tv/f064277c672d45c35a49426dca2020f7/2839/2839278/output.lq.mp4 | length=5367.4472335601 | time=5367.4100453432
 
 *** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
 *** HOLD mpv as a music player
 [[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
 scripts/ which might b sometime useful again for my main pc
 *** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
+*** IDEA [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
+several deps, view installation section in docs
+
 *** IDEA Anime
 https://github.com/ehoneyse/mpv-open-anilist-page
+*** IDEA subtitles
+either [[https://github.com/directorscut82/find_subtitles][this]] or [[https://github.com/davidde/mpv-autosub][this]]. Former - press to download, latter - automatic
+also search on scripts page for 'sub-', there are lots of utility scripts for
+working with subtitles
+
+and yet another [[https://github.com/wiiaboo/mpv-scripts/blob/master/subit.lua][script]] for subtitles
+
+**** IDEA when learning jap
+[[https://github.com/linguisticmind/mpv-scripts/tree/master/copy-subtitle][copy-subtitle]]
+and [[https://github.com/liberlanco/mpv-lang-learner][lang-learner]] as a must
+and [[https://github.com/Ben-Kerman/immersive][immersive]] also for learning
+[[https://github.com/fxmarty/rikai-mpv][rikay-mpv]] - special for jap
+[[https://github.com/laelnasan/yomichampv][yomichampv]]
