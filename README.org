@@ -361,7 +361,7 @@ get thumbfast script https://raw.githubusercontent.com/l-jared/thumbfast/master/
 get thumbfast options https://raw.githubusercontent.com/l-jared/thumbfast/master/thumbfast.conf
 #+end_src
 
-*** [[https://github.com/tomasklaen/uosc][uosc]] Feature-rich minimalist proximity-based UI for MPV player.
+*** TODO [[https://github.com/tomasklaen/uosc][uosc]] Feature-rich minimalist proximity-based UI for MPV player.
 #+begin_src bash :tangle sources
 config_dir="${XDG_CONFIG_HOME:-~/.config}"
 mkdir -pv "$config_dir"/mpv/script-opts/
@@ -372,35 +372,47 @@ rm -fv /tmp/uosc.zip
 get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
 #+end_src
 
-** Other stuff
-- [[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]] ([[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]])
-
-** To do list [0/8]
+** To do list [0/9]
 *** TODO [#B] migrate from 'extended-menu' to external rofi
 use [[https://codeberg.org/NRK/mpv-toolbox/src/branch/master/mdmenu/mdmenu.lua][mdmenu]] and [[https://git.smrk.net/mpv-scripts/file/history.lua.html][history.lua]] scripts as examples
 
-*** TODO recents
-take any script that SIMPLY logs history and pipe it to my extended-menu script
+*** TODO [#B] recents
+take any script that SIMPLY logs history and pipe it to rofi
+
+[[https://gist.github.com/garoto/e0eb539b210ee077c980e01fb2daef4a][script 1]], [[https://github.com/hacel/recent][script 2]]
 
 Example of line format in history.log file (see how it forms [[https://github.com/Eisa01/mpv-scripts#simplehistory][here]]):
 : [Wednesday/September 06/09/2023 19:17:52] "output.lq.mp4" | https://dl4.vibio.tv/f064277c672d45c35a49426dca2020f7/2839/2839278/output.lq.mp4 | length=5367.4472335601 | time=5367.4100453432
 
-*** TODO [[https://github.com/sebaro/ViewTube][viewtube]] for my main pc?
-*** HOLD mpv as a music player
-[[https://wiki.archlinux.org/title/mpv][this]] article also has a section called /Improving mpv as a music player with Lua
-scripts/ which might b sometime useful again for my main pc
-*** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
-*** IDEA [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
+*** IDEA [#B] [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
 several deps, view installation section in docs
-
+*** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
+*** IDEA [[https://gist.github.com/myfreeer/d744c445aa71c0eeb165ca39cf6c0511][cycle-denoise]]
+*** IDEA [[https://github.com/ferreum/mpv-skipsilence][mpv-skipsilence]] and [[https://github.com/detuur/mpv-scripts/blob/master/skiptosilence.lua][skiptosilence]]
 *** IDEA Anime
 https://github.com/ehoneyse/mpv-open-anilist-page
+*** IDEA Shaders
+Check [[https://github.com/hl2guide/better-mpv-config/blob/master/mpv_v3/configs/mpv_shaders.conf][these]] config settings and shaders [[https://github.com/hl2guide/better-mpv-config/tree/master/mpv_v3/shaders][dir]] in same repo.
+
+[[https://github.com/AN3223/dotfiles/blob/master/.config/mpv/scripts/pickshader.lua][pickshader]] script
+
+[[https://github.com/mpv-player/mpv/wiki/User-Scripts#user-shaders][#user-shaders]] ([[https://github.com/bloc97/Anime4K/blob/master/GLSL_Instructions.md][Anime4K]])
+
 *** IDEA subtitles
+- Check [[https://github.com/hl2guide/better-mpv-config/blob/master/mpv_v3/configs/mpv_subtitles.conf][these]] config settings for subtitles.
+- check [[https://github.com/stax76/awesome-mpv#subtitle][this]] user-script list
+
 either [[https://github.com/directorscut82/find_subtitles][this]] or [[https://github.com/davidde/mpv-autosub][this]]. Former - press to download, latter - automatic
 also search on scripts page for 'sub-', there are lots of utility scripts for
 working with subtitles
 
 and yet another [[https://github.com/wiiaboo/mpv-scripts/blob/master/subit.lua][script]] for subtitles
+
+Bind those if ya'll ever need 'em:
+- Shift+g add sub-scale +0.1             # increase the subtitle font size
+- Shift+f add sub-scale -0.1             # decrease the subtitle font size
+- Ctrl+Shift+LEFT sub-step -1            # change subtitle timing such that the previous subtitle is displayed
+- Ctrl+Shift+RIGHT sub-step 1            # change subtitle timing such that the next subtitle is displayed
 
 **** IDEA when learning jap
 [[https://github.com/linguisticmind/mpv-scripts/tree/master/copy-subtitle][copy-subtitle]]
