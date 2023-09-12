@@ -1,1 +1,0 @@
-../myscripts/chapter-list.lua

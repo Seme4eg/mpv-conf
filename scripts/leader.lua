@@ -1,1 +1,0 @@
-../myscripts/leader.lua

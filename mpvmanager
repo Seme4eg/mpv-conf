@@ -19,6 +19,8 @@ get() {
     config_exists "$1" && return
   fi
 
+  ! test -e "./script-modules" && mkdir ./script-modules
+
   # N to enable timestamping (for file overwrite)
   wget -qN -P $prefix $3
 
