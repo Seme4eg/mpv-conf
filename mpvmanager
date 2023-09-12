@@ -4,22 +4,30 @@
 # TODO: compare .conf files and show diffs, asking which to apply if any changes
 # TODO: make commands: help, getall, getnew (no default, require being explicit)
 
+command=$1
+
 # 1st arg - user script name
 # 2nd arg - type of file: script / module / options
 # 3rd arg - url
 get() {
   case $2 in
-    script) prefix=./scripts/ ;;
-    module) prefix=./script-modules/ ;;
-    options) prefix=./script-opts/ ;;
+    script) prefix=./scripts ;;
+    module) prefix=./script-modules ;;
+    options) prefix=./script-opts ;;
   esac
+
+  ! test -e "$prefix" && mkdir "$prefix"
 
   if [ $2 == options ]; then
     # if conf files exist don't overrite them, but get them on fresh install
     config_exists "$1" && return
   fi
 
-  ! test -e "./script-modules" && mkdir ./script-modules
+  file=$(expr "$3" : '^.*/\(.*\)$')
+
+  # when 'sync' argument is given skip over all scripts that are installed
+  # and download only missing
+  [ $command == sync -a -f "$prefix/$file" ] && return
 
   # N to enable timestamping (for file overwrite)
   wget -qN -P $prefix $3

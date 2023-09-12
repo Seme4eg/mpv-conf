@@ -374,13 +374,21 @@ get thumbfast options https://raw.githubusercontent.com/l-jared/thumbfast/master
 
 *** TODO [[https://github.com/tomasklaen/uosc][uosc]] Feature-rich minimalist proximity-based UI for MPV player.
 #+begin_src bash :tangle sources
-config_dir="${XDG_CONFIG_HOME:-~/.config}"
-mkdir -pv "$config_dir"/mpv/script-opts/
-rm -rf "$config_dir"/mpv/scripts/uosc_shared
-wget -P /tmp/ https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip
-unzip -od "$config_dir"/mpv/ /tmp/uosc.zip
-rm -fv /tmp/uosc.zip
-get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
+get_uosc() {
+    config_dir="${XDG_CONFIG_HOME:-~/.config}"
+    mkdir -pv "$config_dir"/mpv/script-opts/
+    rm -rf "$config_dir"/mpv/scripts/uosc_shared
+    wget -P /tmp/ https://github.com/tomasklaen/uosc/releases/latest/download/uosc.zip
+    unzip -od "$config_dir"/mpv/ /tmp/uosc.zip
+    rm -fv /tmp/uosc.zip
+    get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
+}
+
+if [ $command == sync ]; then
+    [ ! -f ./scripts/uosc.lua ] && get_uosc
+else
+    get_uosc
+fi
 #+end_src
 
 ** To do list [0/9]
