@@ -209,31 +209,23 @@ profile=protocol.http
 :header-args: :tangle input.conf
 :END:
 
-[[https://github.com/mpv-player/mpv/blob/master/etc/input.conf][default keybindings]]
+[[file:/usr/share/doc/mpv/input.conf][default keybindings]]
 
-Use SHARP to assign the # key.
+Use SHARP to assign the ~#~ key.
 
-List of commands and further details: DOCS/man/input.rst
-List of special keys: --input-keylist
-Keybindings testing mode: mpv --input-test --force-window --idle
+- List of commands and further details: DOCS/man/input.rst
+- List of special keys: --input-keylist
+- Keybindings testing mode: mpv --input-test --force-window --idle
 
 Use 'ignore' to unbind a key fully (e.g. 'ctrl+a ignore').
 
 Strings need to be quoted and escaped:
   KEY show-text "This is a single backslash: \\ and a quote: \" !"
 
-The default keybindings are hardcoded into the mpv binary.
-You can disable them completely with: --no-input-default-bindings
-
-Developer note:
-On compilation, this file is baked into the mpv binary, and all lines are
-uncommented (unless '#' is followed by a space) - thus this file defines the
-default key bindings.
-
-If this is enabled, treat all the following bindings as default:
 #+begin_src conf
 # THIS FILE IS BEING TANGLES FROM README
 
+# If this is enabled, treat all the following bindings as default:
 default-bindings start
 #+end_src
 
@@ -252,11 +244,6 @@ LEFT  seek -5                          # seek 5 seconds backward
 L no-osd seek  10 exact       # seek exactly 10 seconds forward
 H no-osd seek -10 exact       # seek exactly 10 seconds backward
 
-Ctrl+=     add video-zoom   0.1 # zoom in
-Ctrl+-     add video-zoom  -0.1 # zoom out
-# reset zoom and pan settings
-Ctrl+0 set video-zoom 0 ; set video-pan-x 0 ; set video-pan-y 0
-
 [ multiply speed 1/1.1 # decrease the playback speed
 ] multiply speed 1.1   # increase the playback speed
 > multiply speed 2.0   # double the playback speed
@@ -270,12 +257,6 @@ PLAYPAUSE cycle pause   # toggle pause/playback mode
 PLAYONLY set pause no   # unpause
 PAUSEONLY set pause yes # pause
 #+end_src
-**** Subtitles
-Bind those if ya'll ever need 'em:
-Shift+g add sub-scale +0.1             # increase the subtitle font size
-Shift+f add sub-scale -0.1             # decrease the subtitle font size
-Ctrl+Shift+LEFT sub-step -1            # change subtitle timing such that the previous subtitle is displayed
-Ctrl+Shift+RIGHT sub-step 1            # change subtitle timing such that the next subtitle is displayed
 
 **** Audio
 #+begin_src conf
@@ -293,7 +274,6 @@ Q quit-watch-later # exit and remember the playback position
 ESC set fullscreen no                  # leave fullscreen
 ESC {encode} quit 4
 
-? show-progress                        # show playback progress
 # toggle displaying information and statistics (https://mpv.io/manual/master/#stats)
 i script-binding stats/display-stats-toggle 
 ` script-binding console/enable        # open the console
