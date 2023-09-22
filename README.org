@@ -290,9 +290,8 @@ Ctrl+S screenshot video
 ** [[https://github.com/stax76/awesome-mpv][User scripts]]
 *** my [[https://github.com/Seme4eg/mpv-scripts][own]] scripts
 #+begin_src bash :tangle sources
-get M-x script https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/M-x.lua
-get M-x module https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/script-modules/extended-menu.lua
-get M-x options https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/script-opts/M_x.conf
+get M-x-rofi script https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/M-x-rofi.lua
+get M-x-rofi options https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/script-opts/M_x_rofi.conf
 
 get leader script https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/leader.lua
 get leader module https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/script-modules/leader.lua
@@ -351,7 +350,7 @@ r script-binding UndoRedo/redo
 U script-binding UndoRedo/undoLoop
 #+end_src
 
-*** [[https://github.com/AN3223/dotfiles/blob/master/.config/mpv/scripts/lilskippa.lua][lilskippa]] fast forward to ..
+*** [[https://github.com/AN3223/dotfiles/blob/master/.config/mpv/scripts/lilskippa.lua][lilskippa]] fast forward to scene/black/silence
 -- This script defines the following keybinds:
 --
 -- % skip2scene   -- skip2scene fast forwards to the next scene change
@@ -391,8 +390,8 @@ else
 fi
 #+end_src
 
-** To do list [0/9]
-*** TODO [#B] migrate from 'extended-menu' to external rofi
+** To do list [1/9]
+*** DONE [#B] migrate from 'extended-menu' to external rofi
 use [[https://codeberg.org/NRK/mpv-toolbox/src/branch/master/mdmenu/mdmenu.lua][mdmenu]] and [[https://git.smrk.net/mpv-scripts/file/history.lua.html][history.lua]] scripts as examples
 
 *** TODO [#B] recents
