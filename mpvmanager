@@ -1,9 +1,11 @@
 #!/bin/bash
 #
-# REVIEW: maybe make downloading syncronous ?
 # TODO: compare .conf files and show diffs, asking which to apply if any changes
 # TODO: make commands: help, getall, getnew (no default, require being explicit)
+# TODO: determine whether some scripts were deleted from readme and remove
+# according files
 
+# for now there is only 1 command - 'sync'
 command=$1
 
 # 1st arg - user script name
@@ -23,11 +25,12 @@ get() {
     config_exists "$1" && return
   fi
 
+  # get subsctring after last '/' in url string (ie. M-x.lua) - filename
   file=$(expr "$3" : '^.*/\(.*\)$')
 
   # when 'sync' argument is given skip over all scripts that are installed
   # and download only missing
-  [ $command == sync -a -f "$prefix/$file" ] && return
+  [ "$command" == sync -a -f "$prefix/$file" ] && return
 
   # N to enable timestamping (for file overwrite)
   wget -qN -P $prefix $3
