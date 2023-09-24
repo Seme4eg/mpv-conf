@@ -34,7 +34,7 @@ demuxer-max-bytes=20M                   # sets fast seeking
 # ===== Video =====
 vlang=en,eng                            # Sets the video language
 # https://github.com/mpv-player/mpv/wiki/GPU-Next-vs-GPU
-vo=gpu-next                             # Sets the video out to an experimental video renderer based on libplacebo
+# vo=gpu-next                             # Sets the video out to an experimental video renderer based on libplacebo
 # vo=gpu         # Uses GPU-accelerated video output by default.
 # profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
 
