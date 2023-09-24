@@ -23,57 +23,38 @@ External Sources of this config:
 - https://github.com/hl2guide/better-mpv-config
 - https://raw.githubusercontent.com/classicjazz/mpv-config/master/mpv.conf
 
+**** General
 #+begin_src conf
 # DO NOT ALTER! This config is tangled from README
 
-# ===== Seeking =====
-save-position-on-quit=yes               # saves the seekbar position on exit
-force-seekable=yes                      # forces videos to be seekable
-
-# ===== RAM =====
-cache=yes                               # uses a large seekable RAM cache even for local input.
-# cache-secs=300                        # uses extra large RAM cache (needs cache=yes to make it useful).
-demuxer-max-back-bytes=20M              # sets fast seeking
-demuxer-max-bytes=20M                   # sets fast seeking
-# demuxer-max-bytes=1800M
-# demuxer-max-back-bytes=1200M
-
-# ===== Video =====
-vlang=en,eng                            # Sets the video language
-# https://github.com/mpv-player/mpv/wiki/GPU-Next-vs-GPU
-# vo=gpu-next                             # Sets the video out to an experimental video renderer based on libplacebo
-# vo=gpu         # Uses GPU-accelerated video output by default.
-# profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
-
-# ===== General =====
-hls-bitrate=max                         # uses max quality for HLS streams
 pause=yes                               # disables autoplay
-prefetch-playlist=yes                   # prefetches the playlist
-
-# --- other settings ---
-
-# TESTING - AMD and Intel
-# hwdec=vaapi     # 'nvdec' if using Nvidia gpu
-hwdec=auto # enable best HW decoder; turn off for software decoding
-
 border=no              # hides the window title bar
-
 # Sets the profile restore method to "copy if equal"
 profile-restore=copy-equal
+no-input-builtin-bindings
+save-position-on-quit=yes               # saves the seekbar position on exit
+force-seekable=yes                      # forces videos to be seekable
+#+end_src
+
+**** Video
+#+begin_src conf
+vlang=en,eng                            # Sets the video language
+# Uses GPU-accelerated video output by default.
+# https://github.com/mpv-player/mpv/wiki/GPU-Next-vs-GPU
+vo=gpu # gpu-next <- experimental video renderer based on libplacebo
+profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
+# hwdec=nvdec
+# scale=ewa_lanczossharp
+# dscale=mitchell
 #+end_src
 
 **** Audio
 #+begin_src conf
-volume-max=100                          # maximum volume in %, everything above 100 results in amplification
-volume=70                               # default volume, 100 = unchanged
-
-# af-add='dynaudnorm=g=5:f=250:r=0.9:p=0.5' # Normalizes audio
-# af=scaletempo2
+volume-max=100 # maximum volume in %, everything above 100 results in amplification
+volume=70      # default volume, 100 = unchanged
 #+end_src
 
 **** Motion interpolation
-Enabling those will significantly drop performance on my machine
-
 #+begin_src conf
 override-display-fps=60
 video-sync=display-resample
@@ -81,35 +62,12 @@ interpolation=yes
 tscale=oversample # smoothmotion
 #+end_src
 
-**** Dithering
-#+begin_src conf
-dither-depth=auto
-temporal-dither=yes
-dither=fruit
-#+end_src
-
-**** Debanding
-Debanding is a video processing technique that helps reduce visual artifacts
-caused by banding. Banding refers to the visible striping or posterization that
-might occur in areas of smooth gradients, where subtle color or tonal
-transitions appear as distinct bands rather than a smooth gradient. Debanding
-algorithms smooth out these abrupt transitions, resulting in a more visually
-pleasing and natural-looking video. In the context of mpv, debanding is a
-feature that can be applied during video playback to enhance the visual quality.
-
-#+begin_src conf
-deband=yes          # enabled by default
-deband-iterations=4 # deband steps
-deband-threshold=48 # deband strength
-deband-range=16     # deband range
-deband-grain=48     # dynamic grain: set to "0" if using the static grain shader
-#+end_src
-
 **** Subtitles
 #+begin_src conf
 blend-subtitles=yes
 sub-auto=fuzzy # Enable fuzzy searching:
 #+end_src
+
 **** User scripts
 ***** UOSC
 #+begin_src conf
@@ -128,17 +86,14 @@ border=no
 # osd-scale=0.5
 #+end_src
 
-**** My customs
-#+begin_src conf
-no-input-builtin-bindings
 #+end_src
 **** Custom profiles ( must be last )
 #+begin_src conf
 [fastforward]
 profile-restore=copy-equal
-# scale=bilinear
-# dscale=bilinear
-# cscale=bilinear
+scale=bilinear
+dscale=bilinear
+cscale=bilinear
 vd-lavc-skiploopfilter=all
 vd-lavc-skipframe=all
 #+end_src
@@ -177,26 +132,6 @@ profile=protocol.http
 profile-restore=copy-equal # Sets the profile restore method to "copy if equal"
 profile-desc=ytdl
 profile=protocol.http
-#+end_src
-
-**** Inactive /mpv.conf/ settings
-:PROPERTIES:
-:header-args: :tangle no
-:END:
-
-***** Upscaling & Processing
-#+begin_src conf
-# glsl-shaders-clr # luma upscaling
-# note: any FSRCNNX above FSRCNNX_x2_8-0-4-1 is not worth the additional computional overhead
-# glsl-shaders="~/.config/mpv/shaders/FSRCNNX_x2_8-0-4-1.glsl"
-# scale=ewa_lanczos # luma downscaling
-# note: ssimdownscaler is tuned for mitchell and downscaling=no
-# glsl-shaders-append="~/.config/mpv/shaders/SSimDownscaler.glsl"
-# dscale=mitchell
-# linear-downscaling=no # chroma upscaling and downscaling
-# glsl-shaders-append="~/.config/mpv/shaders/KrigBilateral.glsl"
-# cscale=mitchell
-# sigmoid-upscaling=yes
 #+end_src
 
 *** input.conf
