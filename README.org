@@ -222,13 +222,12 @@ my leader script.
 
 **** Playback
 #+begin_src conf
-# Seek units are in seconds, but note that these are limited by keyframes
-l seek  5                          # seek 5 seconds forward
-h seek -5                          # seek 5 seconds backward
-RIGHT seek  5                          # seek 5 seconds forward
-LEFT  seek -5                          # seek 5 seconds backward
-# Do smaller, always exact (non-keyframe-limited), seeks with shift.
+# always exact seeks (non-keyframe-limited).
 # Don't show them on the OSD (no-osd).
+l no-osd seek 5 exact
+h no-osd seek -5 exact
+RIGHT no-osd seek 5 exact
+LEFT no-osd seek -5 exact
 L no-osd seek  10 exact       # seek exactly 10 seconds forward
 H no-osd seek -10 exact       # seek exactly 10 seconds backward
 
@@ -378,7 +377,7 @@ else
 fi
 #+end_src
 
-** To do list [1/9]
+** To do list [1/10]
 *** DONE [#B] migrate from 'extended-menu' to external rofi
 use [[https://codeberg.org/NRK/mpv-toolbox/src/branch/master/mdmenu/mdmenu.lua][mdmenu]] and [[https://git.smrk.net/mpv-scripts/file/history.lua.html][history.lua]] scripts as examples
 
