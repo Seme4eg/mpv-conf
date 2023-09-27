@@ -16,6 +16,7 @@ get() {
     script) prefix=./scripts ;;
     module) prefix=./script-modules ;;
     options) prefix=./script-opts ;;
+    shader) prefix=./shaders ;;
   esac
 
   ! test -e "$prefix" && mkdir "$prefix"
