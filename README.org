@@ -158,6 +158,8 @@ get M-x-rofi options https://raw.githubusercontent.com/Seme4eg/mpv-scripts/maste
 get leader script https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/leader.lua
 get leader module https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/script-modules/leader.lua
 get leader options https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/script-opts/leader.conf
+
+get shaders-rofi script https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/shaders-rofi.lua
 #+end_src
 
 *** [[https://gist.github.com/Artefact2/0a9c87d6d0f0ef6a565e44d830943fff][dbvol]] - volume control using decibels
@@ -267,14 +269,6 @@ border=no
 # And these doesn't
 # osd-font-size=45
 # osd-scale=0.5
-#+end_src
-*** pickshader
-#+begin_src bash :tangle sources
-get pickshader script https://github.com/AN3223/dotfiles/raw/master/.config/mpv/scripts/pickshader.lua
-#+end_src
-
-#+begin_src conf :tangle input.conf
-Ctrl+s script-binding pickshader
 #+end_src
 
 ** [[https://github.com/stax76/awesome-mpv#shaders][Shaders]]
