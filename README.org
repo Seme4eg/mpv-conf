@@ -3,7 +3,7 @@
 
 [[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i deem to b a _must-read_)
 
-*Dependencies*: libsixel, lua52, sndio
+*Dependencies*: libsixel, lua52, sndio, unzip
 
 This repository works via Emacs Org-mode tangling, this readme tangles to
 =mpv.conf=, =input.conf= and =sources= file which contains links to all external
