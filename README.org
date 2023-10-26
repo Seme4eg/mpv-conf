@@ -55,7 +55,7 @@ volume=70      # default volume, 100 = unchanged
 
 **** Motion interpolation
 #+begin_src conf
-override-display-fps=60
+display-fps-override=60
 video-sync=display-resample
 interpolation=yes
 tscale=oversample # smoothmotion
