@@ -2,7 +2,6 @@
 /shaders/
 /*.conf
 /fonts/
-/scripts/*.lua
-/scripts/uosc_shared/
+/scripts/
 /sources
 /script-modules/
