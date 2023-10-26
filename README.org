@@ -248,7 +248,7 @@ get_uosc() {
 }
 
 if [ $command == sync ]; then
-    [ ! -f ./scripts/uosc.lua ] && get_uosc
+    [ ! -d ./scripts/uosc ] && get_uosc
 else
     get_uosc
 fi
