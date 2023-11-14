@@ -270,6 +270,10 @@ border=no
 # osd-font-size=45
 # osd-scale=0.5
 #+end_src
+*** copy-paste
+#+begin_src bash :tangle sources
+get SmartCopyPaste script https://github.com/Eisa01/mpv-scripts/raw/master/scripts/SmartCopyPaste.lua
+#+end_src
 
 ** [[https://github.com/stax76/awesome-mpv#shaders][Shaders]]
 - [[https://gist.github.com/igv][SSimDownscaler, SSimSuperRes, Krig, Adaptive Sharpen, etc.]] -
