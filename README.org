@@ -99,12 +99,10 @@ my leader script.
 #+begin_src conf
 # always exact seeks (non-keyframe-limited).
 # Don't show them on the OSD (no-osd).
-l no-osd seek 5 exact
-h no-osd seek -5 exact
+l no-osd seek 10 exact
+h no-osd seek -10 exact
 RIGHT no-osd seek 5 exact
 LEFT no-osd seek -5 exact
-L no-osd seek  10 exact       # seek exactly 10 seconds forward
-H no-osd seek -10 exact       # seek exactly 10 seconds backward
 
 [ multiply speed 1/1.1 # decrease the playback speed
 ] multiply speed 1.1   # increase the playback speed
