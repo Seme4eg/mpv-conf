@@ -120,8 +120,8 @@ PAUSEONLY set pause yes # pause
 
 **** Audio
 #+begin_src conf
-j add volume -2
-k add volume 2
+j add volume -5
+k add volume 5
 m cycle mute                           # toggle mute
 #+end_src
 
