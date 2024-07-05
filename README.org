@@ -271,7 +271,7 @@ border=no
 # osd-font-size=45
 # osd-scale=0.5
 #+end_src
-*** copy-paste
+*** [[https://github.com/Eisa01/mpv-scripts#smartcopypaste][copy-paste]]
 #+begin_src bash :tangle sources
 get SmartCopyPaste script https://github.com/Eisa01/mpv-scripts/raw/master/scripts/SmartCopyPaste.lua
 #+end_src
@@ -350,11 +350,8 @@ profile-desc=ytdl
 profile=protocol.http
 #+end_src
 
-** To do list [1/10]
-*** DONE [#B] migrate from 'extended-menu' to external rofi
-use [[https://codeberg.org/NRK/mpv-toolbox/src/branch/master/mdmenu/mdmenu.lua][mdmenu]] and [[https://git.smrk.net/mpv-scripts/file/history.lua.html][history.lua]] scripts as examples
-
-*** TODO [#B] recents
+** To do list [0/6]
+*** IDEA recents
 take any script that SIMPLY logs history and pipe it to rofi
 
 [[https://gist.github.com/garoto/e0eb539b210ee077c980e01fb2daef4a][script 1]], [[https://github.com/hacel/recent][script 2]]
@@ -364,7 +361,6 @@ Example of line format in history.log file (see how it forms [[https://github.co
 
 *** IDEA [#B] [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
 several deps, view installation section in docs
-*** IDEA [[https://github.com/zenyd/mpv-scripts][copy-paste-url]]
 *** IDEA [[https://gist.github.com/myfreeer/d744c445aa71c0eeb165ca39cf6c0511][cycle-denoise]]
 *** IDEA [[https://github.com/ferreum/mpv-skipsilence][mpv-skipsilence]] and [[https://github.com/detuur/mpv-scripts/blob/master/skiptosilence.lua][skiptosilence]]
 *** IDEA Anime
