@@ -27,7 +27,7 @@ External Sources of this config:
 #+begin_src conf
 # DO NOT ALTER! This config is tangled from README
 
-pause=yes                               # disables autoplay
+pause=no                               # disables autoplay
 border=no              # hides the window title bar
 # Sets the profile restore method to "copy if equal"
 profile-restore=copy-equal
