@@ -1,12 +1,25 @@
 #!/bin/bash
-#
-# TODO: compare .conf files and show diffs, asking which to apply if any changes
-# TODO: make commands: help, getall, getnew (no default, require being explicit)
-# TODO: determine whether some scripts were deleted from readme and remove
-# according files
 
-# for now there is only 1 command - 'sync'
 command=$1
+
+helpf() {
+  echo "Usage: $0 <command>"
+  echo -e ""
+  echo -e "Commands:"
+  echo -e "   help - Print this help message."
+  echo -e "   pull - Fetch all scripts unconditionally, even if they are downloaded."
+  echo -e "   sync - Featch only missing scripts."
+  exit 1
+}
+
+# Get the options
+case "$command" in
+  pull) ;;
+  sync) ;;
+  help) helpf ;;
+  hlep) helpf ;; # option for disabled like me
+  *) helpf ;;
+esac
 
 # 1st arg - user script name
 # 2nd arg - type of file: script / module / options
@@ -21,7 +34,7 @@ get() {
 
   ! test -e "$prefix" && mkdir "$prefix"
 
-  if [ $2 == options ]; then
+  if [ "$2" == options ]; then
     # if conf files exist don't overrite them, but get them on fresh install
     config_exists "$1" && return
   fi
@@ -31,10 +44,10 @@ get() {
 
   # when 'sync' argument is given skip over all scripts that are installed
   # and download only missing
-  [ "$command" == sync -a -f "$prefix/$file" ] && return
+  [ "$command" == sync ] && [ -f "$prefix/$file" ] && return
 
   # N to enable timestamping (for file overwrite)
-  wget -qN -P $prefix $3
+  wget -qN -P "$prefix" "$3"
 
   wget_exit_status=$?
 
