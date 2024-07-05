@@ -145,6 +145,9 @@ Alt+Ctrl+v cycle-values video-aspect-override "16:9" "4:3" "2.35:1" "-1"
 
 # take a screenshot of the video in its original resolution without subtitles
 Ctrl+S screenshot video
+
+H  no-osd sub-seek -1   # seek to the previous subtitle
+L  no-osd sub-seek  1   # seek to the next subtitle
 #+end_src
 
 ** [[https://github.com/stax76/awesome-mpv][User scripts]]
