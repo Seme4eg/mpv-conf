@@ -5,12 +5,13 @@
 
 *Dependencies*: libsixel, lua52, sndio, unzip
 
-This repository works via Emacs Org-mode tangling, this readme tangles to
-=mpv.conf=, =input.conf= and =sources= file which contains links to all external
-scripts i use. Save this file once and those files will be created. Then run
-=./mpvmanager= without an argument to get all scripts downloaded to proper
-directories. Run =./mpvmanager sync= to download only missing (or if you added new
-scripts to this readme).
+This repository works via Emacs Org-mode tangling. Sections of this readme
+are tangled to =mpv.conf=, =input.conf= and =sources= file which contains links to all
+external scripts i use. Save this file once and those files will be created.
+Then run =./mpvmanager= without an argument to get all scripts downloaded to
+proper directories. Run =./mpvmanager sync= to download only missing (or if you
+added new scripts to this readme). It won't delete scripts that you removed from
+readme, cuz i deemed such functionality as overly complex, remove those by hand.
 
 ** Configuration
 *** mpv.conf
@@ -86,7 +87,7 @@ Strings need to be quoted and escaped:
   KEY show-text "This is a single backslash: \\ and a quote: \" !"
 
 #+begin_src conf
-# THIS FILE IS BEING TANGLES FROM README
+# THIS FILE IS BEING TANGLED FROM README
 
 # If this is enabled, treat all the following bindings as default:
 default-bindings start
