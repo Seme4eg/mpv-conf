@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/usr/bin/sh
 
 command=$1
 
 helpf() {
   echo "Usage: $0 <command>"
-  echo -e ""
-  echo -e "Commands:"
-  echo -e "   help - Print this help message."
-  echo -e "   pull - Fetch all scripts unconditionally, even if they are downloaded."
-  echo -e "   sync - Featch only missing scripts."
+  echo ""
+  echo "Commands:"
+  echo "   help - Print this help message."
+  echo "   pull - Fetch all scripts unconditionally, even if they are downloaded."
+  echo "   sync - Featch only missing scripts."
   exit 1
 }
 
@@ -34,7 +34,7 @@ get() {
 
   ! test -e "$prefix" && mkdir "$prefix"
 
-  if [ "$2" == options ]; then
+  if [ "$2" = options ]; then
     # if conf files exist don't overrite them, but get them on fresh install
     config_exists "$1" && return
   fi
@@ -44,7 +44,7 @@ get() {
 
   # when 'sync' argument is given skip over all scripts that are installed
   # and download only missing
-  [ "$command" == sync ] && [ -f "$prefix/$file" ] && return
+  [ "$command" = sync ] && [ -f "$prefix/$file" ] && return
 
   # N to enable timestamping (for file overwrite)
   wget -qN -P "$prefix" "$3"
