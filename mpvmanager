@@ -63,4 +63,4 @@ config_exists() {
   test -e "./script-opts/$1.conf"
 }
 
-. sources
+. ./sources
