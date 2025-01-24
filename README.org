@@ -46,6 +46,11 @@ vo=gpu # gpu-next <- experimental video renderer based on libplacebo
 profile=gpu-hq # Can cause performance problems with some GPU drivers and GPUs.
 # scale=ewa_lanczossharp
 dscale=mitchell
+
+# due to me being in places with shitty internet most of the time that makes
+# much more sence
+# (https://www.reddit.com/r/linuxquestions/comments/clyt9z/how_do_i_make_mpv_select_1080p_or_less_for_video/)
+ytdl-format=bestvideo[height<=480]+bestaudio/best
 #+end_src
 
 **** Audio
