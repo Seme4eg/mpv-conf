@@ -254,7 +254,7 @@ get_uosc() {
     get uosc options https://github.com/tomasklaen/uosc/releases/latest/download/uosc.conf
 }
 
-if [ $command == sync ]; then
+if [ $command = sync ]; then
     [ ! -d ./scripts/uosc ] && get_uosc
 else
     get_uosc
