@@ -16,9 +16,7 @@ helpf() {
 case "$command" in
   pull) ;;
   sync) ;;
-  help) helpf ;;
-  hlep) helpf ;; # option for disabled like me
-  *) helpf ;;
+  help | hlep | *) helpf ;;
 esac
 
 # 1st arg - user script name
@@ -30,6 +28,7 @@ get() {
     module) prefix=./script-modules ;;
     options) prefix=./script-opts ;;
     shader) prefix=./shaders ;;
+    *) prefix="./$2" ;; # custom possibly nested prefix
   esac
 
   ! test -e "$prefix" && mkdir "$prefix"

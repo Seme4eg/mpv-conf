@@ -282,6 +282,13 @@ border=no
 get SmartCopyPaste script https://github.com/Eisa01/mpv-scripts/raw/master/scripts/SmartCopyPaste.lua
 #+end_src
 
+*** [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
+#+begin_src bash :tangle sources
+get mpv-webtorrent-hook scripts/webtorrent-hook https://raw.githubusercontent.com/noctuid/mpv-webtorrent-hook/refs/heads/master/main.lua
+get mpv-webtorrent-hook scripts/webtorrent-hook https://raw.githubusercontent.com/noctuid/mpv-webtorrent-hook/refs/heads/master/webtorrent-speed-printer.sh
+get mpv-webtorrent-hook scripts/webtorrent-hook https://raw.githubusercontent.com/noctuid/mpv-webtorrent-hook/refs/heads/master/webtorrent-wrap.sh
+#+end_src
+
 ** [[https://github.com/stax76/awesome-mpv#shaders][Shaders]]
 - [[https://gist.github.com/igv][SSimDownscaler, SSimSuperRes, Krig, Adaptive Sharpen, etc.]] -
   - SSimDownscaler: Perceptually based downscaler.
