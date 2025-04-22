@@ -287,6 +287,11 @@ get SmartCopyPaste script https://github.com/Eisa01/mpv-scripts/raw/master/scrip
 get mpv-webtorrent-hook scripts/webtorrent-hook https://raw.githubusercontent.com/noctuid/mpv-webtorrent-hook/refs/heads/master/main.lua
 get mpv-webtorrent-hook scripts/webtorrent-hook https://raw.githubusercontent.com/noctuid/mpv-webtorrent-hook/refs/heads/master/webtorrent-speed-printer.sh
 get mpv-webtorrent-hook scripts/webtorrent-hook https://raw.githubusercontent.com/noctuid/mpv-webtorrent-hook/refs/heads/master/webtorrent-wrap.sh
+
+config_dir="${XDG_CONFIG_HOME:-~/.config}"
+mkdir -pv "$config_dir"/mpv/script-opts/
+chmod +x "$config_dir"/mpv/scripts/webtorrent-hook/webtorrent-speed-printer.sh
+chmod +x "$config_dir"/mpv/scripts/webtorrent-hook/webtorrent-wrap.sh
 #+end_src
 
 ** [[https://github.com/stax76/awesome-mpv#shaders][Shaders]]
