@@ -158,6 +158,10 @@ L  no-osd sub-seek  1   # seek to the next subtitle
 #+end_src
 
 ** [[https://github.com/stax76/awesome-mpv][User scripts]]
+FYI: to get those debug messages displayed run add
+~--msg-level={script_name}={verbosity_level}~ to mpv command where
+'verbosity_level' is 'debug'.
+
 *** my [[https://github.com/Seme4eg/mpv-scripts][own]] scripts
 #+begin_src bash :tangle sources
 get M-x-rofi script https://raw.githubusercontent.com/Seme4eg/mpv-scripts/master/M-x-rofi.lua
@@ -224,6 +228,8 @@ U script-binding UndoRedo/undoLoop
 #+end_src
 
 *** [[https://github.com/AN3223/dotfiles/blob/master/.config/mpv/scripts/lilskippa.lua][lilskippa]] fast forward to scene/black/silence
+Alternatives: [[https://github.com/ferreum/mpv-skipsilence][mpv-skipsilence]] and [[https://github.com/detuur/mpv-scripts/blob/master/skiptosilence.lua][skiptosilence]]
+
 -- This script defines the following keybinds:
 --
 -- % skip2scene   -- skip2scene fast forwards to the next scene change
@@ -279,6 +285,7 @@ border=no
 # osd-font-size=45
 # osd-scale=0.5
 #+end_src
+
 *** [[https://github.com/Eisa01/mpv-scripts#smartcopypaste][copy-paste]]
 #+begin_src bash :tangle sources
 get SmartCopyPaste script https://github.com/Eisa01/mpv-scripts/raw/master/scripts/SmartCopyPaste.lua
