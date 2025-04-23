@@ -3,15 +3,16 @@
 
 [[https://mpv.io/manual/master/][official manual]], [[https://wiki.archlinux.org/title/mpv][arch mpv page]] (which i deem to b a _must-read_)
 
-*Dependencies*: libsixel, lua52, sndio, unzip
+*Dependencies*: libsixel, lua52, sndio, unzip, webtorrent-cli, xidel
 
 This repository works via Emacs Org-mode tangling. Sections of this readme
 are tangled to =mpv.conf=, =input.conf= and =sources= file which contains links to all
-external scripts i use. Save this file once and those files will be created.
-Then run =./mpvmanager= without an argument to get all scripts downloaded to
-proper directories. Run =./mpvmanager sync= to download only missing (or if you
-added new scripts to this readme). It won't delete scripts that you removed from
-readme, cuz i deemed such functionality as overly complex, remove those by hand.
+external scripts i use. Run 'tangle' command on this file once and those files
+will be created. Then run =./mpvmanager= without an argument to get all scripts
+downloaded to proper directories. Run =./mpvmanager sync= to download only missing
+(or if you added new scripts to this readme). It won't delete scripts that you
+removed from readme, cuz i deem such functionality as overly complex, remove
+those by hand.
 
 ** Configuration
 *** mpv.conf
@@ -199,6 +200,7 @@ get quack script https://raw.githubusercontent.com/CounterPillow/mpv-quack/maste
 conf_file=quack.conf
 ! config_exists quack && echo "ducksecs=1" >"$conf_file"
 #+end_src
+
 *** [[https://github.com/4e6/mpv-reload][reload]]
 ~ctrl+r~ to reload if anything is wrong / stuck
 
