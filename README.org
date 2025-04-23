@@ -368,7 +368,7 @@ profile-desc=ytdl
 profile=protocol.http
 #+end_src
 
-** To do list [0/6]
+** To do list
 *** IDEA recents
 take any script that SIMPLY logs history and pipe it to rofi
 
@@ -377,12 +377,6 @@ take any script that SIMPLY logs history and pipe it to rofi
 Example of line format in history.log file (see how it forms [[https://github.com/Eisa01/mpv-scripts#simplehistory][here]]):
 : [Wednesday/September 06/09/2023 19:17:52] "output.lq.mp4" | https://dl4.vibio.tv/f064277c672d45c35a49426dca2020f7/2839/2839278/output.lq.mp4 | length=5367.4472335601 | time=5367.4100453432
 
-*** IDEA [#B] [[https://github.com/noctuid/mpv-webtorrent-hook][mpv-webtorrent-hook]]
-several deps, view installation section in docs
-*** IDEA [[https://gist.github.com/myfreeer/d744c445aa71c0eeb165ca39cf6c0511][cycle-denoise]]
-*** IDEA [[https://github.com/ferreum/mpv-skipsilence][mpv-skipsilence]] and [[https://github.com/detuur/mpv-scripts/blob/master/skiptosilence.lua][skiptosilence]]
-*** IDEA Anime
-https://github.com/ehoneyse/mpv-open-anilist-page
 *** IDEA subtitles
 - Check [[https://github.com/hl2guide/better-mpv-config/blob/master/mpv_v3/configs/mpv_subtitles.conf][these]] config settings for subtitles.
 - check [[https://github.com/stax76/awesome-mpv#subtitle][this]] user-script list
